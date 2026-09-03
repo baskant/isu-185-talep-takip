@@ -1,0 +1,119 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Mobil Saha | İSU 185{% endblock %}
+{% block head %}
+<link rel="manifest" href="{% static 'mobile/manifest.json' %}">
+<meta name="theme-color" content="#173d31">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="{% static 'css/mobile_saha_v28.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile_saha_v31.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile_saha_v32.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile_saha_v34.css' %}">
+<link rel="stylesheet" href="{% static 'css/mobile_saha_v36.css' %}">
+<link rel="stylesheet" href="{% static 'css/is_emri_fotograf_v42.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block body %}
+<main class="m28-shell m31-shell m34-shell" id="m34-page">
+  <header class="m28-header m34-header">
+    <div><span>İSU 185 • MOBİL SAHA</span><h1>İş Emirlerim</h1></div>
+    <button type="button" id="m34-notification-button" class="m34-notification-button">Bildirim <b id="m31-unread">{{ aktif_bildirim_sayisi }}</b></button>
+  </header>
+
+  <div class="m28-stats m34-stats"><div><b>{{ aktif }}</b><span>Aktif İş</span></div><div><b>{{ acil }}</b><span>Acil</span></div></div>
+
+  <section class="m28-list m34-list">
+  {% for e in is_emirleri %}{% with t=e.talep %}
+    <article class="m28-card m34-card v36-work-card {{ e.kuyruk_sinifi }} {% if t.oncelik == 'acil' %}urgent{% endif %}" id="work-{{ e.pk }}">
+      <div class="v36-queue-badge {{ e.kuyruk_sinifi }}">{{ e.kuyruk_etiketi }}</div>
+      <div class="m28-card-head"><div><strong>{{ e.is_emri_no }}</strong><span>{{ t.talep_no }}</span></div><span class="m28-priority {{ t.oncelik }}">{{ t.get_oncelik_display }}</span></div>
+      <h2>{{ t.is_turu }} → {{ t.is_alt_turu }}</h2>
+      <div class="m28-address"><b>{{ t.ilce }} / {{ t.mahalle }}</b><span>{{ t.yol }}{% if t.kapi_no %} No: {{ t.kapi_no }}{% endif %}</span></div>
+      {% if t.aciklama %}<p class="m28-desc">{{ t.aciklama }}</p>{% endif %}
+
+      {% if t.lat and t.lng %}
+      <div class="m34-map-block">
+        <button type="button" class="m28-map m34-map-toggle" data-map-target="m34-map-{{ e.pk }}">⌖ Haritada Göster</button>
+        <div class="m34-map-panel" id="m34-map-{{ e.pk }}" hidden data-lat="{{ t.lat }}" data-lng="{{ t.lng }}" data-title="{{ e.is_emri_no }} • {{ t.ilce }} / {{ t.mahalle }}">
+          <div class="m34-map-canvas"></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="m28-status">{{ e.get_durum_display }}</div>
+
+      {% if t.durum == "yerinde" or t.durum == "islemde" %}
+      <section class="v42-photo-section">
+        <div class="v42-photo-head">
+          <div><span>ZORUNLU İŞ EMRİ GÖRSELLERİ</span><strong>{{ e.foto_yuklenen }} / {{ e.foto_zorunlu }} tamamlandı</strong></div>
+          <b>{{ t.is_alt_turu.ad }}</b>
+        </div>
+        <div class="v42-photo-slots">
+          {% for slot in e.foto_slotlari %}
+          <div class="v42-photo-slot {% if slot.tamam %}done{% endif %}">
+            <div class="v42-photo-title"><i>{{ slot.sira }}</i><strong>{{ slot.etiket }}</strong>{% if slot.tamam %}<span>✓ Yüklendi</span>{% else %}<span>Zorunlu</span>{% endif %}</div>
+            {% if slot.fotograf %}
+              <a class="v42-photo-preview" href="{{ slot.fotograf.foto.url }}" target="_blank"><img src="{{ slot.fotograf.foto.url }}" alt="{{ slot.etiket }}"></a>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:is_emri_fotograf_yukle' e.pk %}" class="v42-photo-upload">
+              {% csrf_token %}<input type="hidden" name="next" value="mobil"><input type="hidden" name="sira" value="{{ slot.sira }}">
+              <input type="file" name="foto" accept="image/*" capture="environment" required>
+              <button type="submit">{% if slot.tamam %}Fotoğrafı Değiştir{% else %}Fotoğraf Ekle{% endif %}</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="v42-photo-note">Şef onayına göndermeden önce bu iş alt türü için tanımlı tüm zorunlu görseller tamamlanmalıdır.</p>
+      </section>
+      {% endif %}
+
+      {% if t.durum == "sahaya_atandi" %}
+      <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'kabul_edildi' %}">{% csrf_token %}<input type="hidden" name="next" value="mobil"><button>✓ İşi Kabul Et</button></form>
+      {% elif t.durum == "kabul_edildi" %}
+      <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'yolda' %}">{% csrf_token %}<input type="hidden" name="next" value="mobil"><button>➜ Yola Çıktım</button></form>
+      {% elif t.durum == "yolda" %}
+      <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'yerinde' %}" class="m31-gps-form">{% csrf_token %}<input type="hidden" name="next" value="mobil"><input type="hidden" name="gps_lat"><input type="hidden" name="gps_lng"><button>⌖ GPS ile Adrese Ulaştım</button></form>
+      {% elif t.durum == "yerinde" %}
+      <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'islemde' %}" class="m31-gps-form">
+        {% csrf_token %}<input type="hidden" name="next" value="mobil"><input type="hidden" name="gps_lat"><input type="hidden" name="gps_lng">
+        <button class="m32-primary-submit">⌖ Müdahaleye Başla</button>
+      </form>
+      {% elif t.durum == "islemde" %}
+      <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'onay_bekliyor' %}" class="m28-complete">
+        {% csrf_token %}<input type="hidden" name="next" value="mobil">
+        <textarea name="sonuc_notu" required maxlength="1000" placeholder="Yapılan işlemi kısaca yazın..."></textarea>
+        <button class="m32-primary-submit">Bitir • Şef Onayına Gönder</button>
+      </form>
+      {% elif t.durum == "onay_bekliyor" %}<div class="m28-await">Şef onayı bekleniyor.</div>{% endif %}
+
+      {% if e.gps_dogrulama_tarihi %}<div class="m31-proof"><span>GPS</span><b>{% if e.gps_dogrulandi %}Doğrulandı{% else %}Kaydedildi{% endif %}</b>{% if e.gps_mesafe_m != None %}<small>{{ e.gps_mesafe_m }} m</small>{% endif %}</div>{% endif %}
+      <a class="m28-detail" href="{% url 'dashboard:is_emri_detay' e.pk %}">İş Emri / Zaman Çizelgesi →</a>
+    </article>
+  {% endwith %}{% empty %}<div class="m28-empty"><strong>Aktif iş emri yok.</strong></div>{% endfor %}
+  </section>
+</main>
+
+<div class="m34-notification-overlay open" id="m34-notification-overlay" aria-modal="true" role="dialog">
+  <section class="m34-notification-modal">
+    <div class="m34-modal-brand"><span>İSU 185</span><b>Saha Bildirimi</b></div>
+    <div id="m34-modal-content">
+      {% if modal_bildirimler %}
+        <h2>{% if aktif_bildirim_sayisi == 1 %}1 iş emri atandı / aktif{% else %}{{ aktif_bildirim_sayisi }} iş emri atandı / aktif{% endif %}</h2>
+        <div class="m34-modal-work-list">
+        {% for b in modal_bildirimler %}
+          <div class="m34-modal-work" data-work-id="{{ b.is_emri_id }}">
+            <strong>{{ b.baslik }}</strong><span>{{ b.mesaj }}</span><small>{{ b.is_emri_no }} • {{ b.talep_no }}</small>
+          </div>
+        {% endfor %}
+        </div>
+      {% else %}
+        <div class="m34-no-work"><span>✓</span><h2>Şu an atanmış aktif iş yok</h2></div>
+      {% endif %}
+    </div>
+    <button type="button" class="m34-modal-ok" id="m34-modal-ok">Tamam</button>
+  </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/mobile_saha_v34.js' %}"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("{% url 'dashboard:mobil_service_worker' %}",{scope:"/"}).catch(()=>{});}</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Saha Ataması | İSU 185{% endblock %}
+{% block body %}
+<main class="workspace-page narrow-wide v34-assignment-page">
+  <div class="page-heading v34-heading-simple">
+    <div>
+      <span class="eyebrow">SAHA ATAMASI</span>
+      <h1>{{ talep.talep_no }}</h1>
+      <div class="v34-ticket-line">{{ talep.ilce }} / {{ talep.mahalle.ad }} <b>•</b> {{ talep.is_turu }} → {{ talep.is_alt_turu }}</div>
+    </div>
+    <span class="badge priority-{{ talep.oncelik }}">{{ talep.get_oncelik_display }}</span>
+  </div>
+
+  <div class="assignment-layout v34-assignment-layout">
+    <section class="panel v34-assignment-main">
+      <div class="panel-head"><div><h2>Manuel Saha Ataması</h2></div></div>
+      <form method="post" class="form-stack v34-manual-form">
+        {% csrf_token %}
+        <label>
+          Saha ekibi / personeli
+          <select name="saha" required {% if not uygun %}disabled{% endif %}>
+            <option value="">Saha seçiniz</option>
+            {% for p in uygun %}
+              <option value="{{ p.pk }}">
+                {{ p.kullanici.get_full_name|default:p.kullanici.username }} — {{ p.rol.ad }} — {{ p.acik_is_sayisi }} açık/bekleyen iş
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+        {% if not uygun %}
+          <div class="form-error">Bu talep için şu anda atanabilir saha hesabı bulunmuyor.</div>
+        {% endif %}
+        <button class="btn primary full large" {% if not uygun %}disabled{% endif %}>Seçilen Sahaya Ata</button>
+      </form>
+    </section>
+
+    <section class="panel v34-crew-panel">
+      <div class="panel-head"><div><h2>{{ talep.ilce }} Saha Ekipleri</h2></div></div>
+      <div class="assignment-crew-list">
+        {% for p in bolge_saha %}
+          <div class="assignment-crew v34-assignment-crew">
+            <span class="crew-avatar">{{ p.kullanici.username|slice:":1"|upper }}</span>
+            <div class="assignment-crew-info">
+              <strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong>
+              <small>{{ p.rol.ad }} • @{{ p.kullanici.username }}</small>
+              <div class="v34-skill-tags">
+                {% for x in p.uzmanlik_is_turleri.all %}<span class="mini-tag">{{ x.ad }}</span>{% empty %}<span class="mini-tag">Genel saha</span>{% endfor %}
+              </div>
+            </div>
+            <div class="crew-state">
+              <span class="badge {% if p.aktif_operasyon_var %}warn-badge{% else %}success-badge{% endif %}">
+                {{ p.acik_is_sayisi }} iş
+              </span>
+              {% if p.aktif_operasyon_var %}<small>{{ p.aktif_operasyon_sayisi }} aktif operasyon</small>{% else %}<small>Aktif müdahale yok</small>{% endif %}
+            </div>
+          </div>
+        {% empty %}<div class="empty-state-mini">Bu ilçede saha hesabı bulunmuyor.</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

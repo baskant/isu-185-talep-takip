@@ -1,0 +1,477 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}185 Çağrı Merkezi | İSU{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="{% static 'css/cagri185_v14.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v15.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v17.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v18.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v19.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v21.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v22.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v23.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v25.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v26.css' %}">
+<link rel="stylesheet" href="{% static 'css/kurumsal_v28.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v36.css' %}">
+<link rel="stylesheet" href="{% static 'css/cagri185_v38.css' %}">
+{% endblock %}
+{% block body %}
+<main class="workspace-page call185-v14">
+  <div class="page-heading call-heading">
+    <div>
+      <span class="eyebrow">185 ÇAĞRI MERKEZİ</span>
+      <h1>Çağrı & Talep Yönetimi</h1>
+      <p>Yeni çağrıyı kaydedin; şef onaylı tamamlanan işler aşağıdaki vatandaş arama kuyruğuna otomatik düşer.</p>
+    </div>
+    <div class="compact-stats">
+      <div class="call-stat-card danger"><span>Yeni / Bekleyen</span><strong data-live-stat="new">{{ stats.yeni }}</strong></div>
+      <div class="call-stat-card warn"><span>Sahada</span><strong data-live-stat="field">{{ stats.islemde }}</strong></div>
+      <div class="call-stat-card approval"><span>Şef Onayı</span><strong data-live-stat="approval">{{ stats.onay }}</strong></div>
+      <div class="call-stat-card success"><span>Tamamlandı</span><strong data-live-stat="done">{{ stats.tamam }}</strong></div>
+      <div class="call-stat-card callback"><span>Aranacak</span><strong data-live-stat="feedback">{{ stats.geri_toplam }}</strong></div>
+    </div>
+  </div>
+
+  <nav class="call-tabs" role="tablist" aria-label="185 çalışma alanı">
+    <button type="button" class="call-tab-button active" data-call-tab="new" role="tab" aria-selected="true">
+      <span class="call-tab-icon">＋</span>
+      <span><strong>Yeni Talep</strong><small>Yeni çağrı kaydı</small></span>
+    </button>
+    <button type="button" class="call-tab-button" data-call-tab="list" role="tab" aria-selected="false">
+      <span class="call-tab-icon">▤</span>
+      <span><strong>Talepler</strong><small>{{ stats.toplam }} kayıt • detayları görüntüle</small></span>
+    </button>
+  </nav>
+
+  <section class="call-tab-panel active" data-call-panel="new">
+    <form method="post" id="talep-form" class="ticket-workspace-v13" autocomplete="off">
+      {% csrf_token %}
+
+      <section class="panel request-citizen-panel">
+        <div class="section-title compact"><span class="step">01</span><div><h2>Vatandaş Bilgileri</h2><p>Arayan kişinin temel iletişim bilgileri.</p></div></div>
+        <div class="form-grid two compact-form-grid">
+          <label>Ad {{ form.vatandas_ad }}</label>
+          <label>Soyad {{ form.vatandas_soyad }}</label>
+          <label>Telefon {{ form.telefon }}</label>
+          <label>E-posta {{ form.eposta }}</label>
+        </div>
+        <div class="citizen-form-hint">
+          <span>185 GERİ DÖNÜŞ</span>
+          <p>Bu telefon bilgisi, teknik işlem tamamlandıktan sonra vatandaş bilgilendirme kuyruğunda yeniden kullanılacaktır.</p>
+        </div>
+      </section>
+
+      <section class="panel request-fault-panel">
+        <div class="section-title compact"><span class="step">03</span><div><h2>Talep & Arıza Bilgisi</h2><p>İş türü, alt tür, öncelik ve açıklama.</p></div></div>
+        <div class="form-stack compact-form-stack">
+          <label>İş Türü {{ form.is_turu }}</label>
+          <label>İş Alt Türü {{ form.is_alt_turu }}</label>
+          <label>Öncelik {{ form.oncelik }}</label>
+          <label>Arıza Açıklaması {{ form.aciklama }}</label>
+        </div>
+        {% if form.errors %}<div class="form-error">{{ form.errors }}</div>{% endif %}
+        <div class="route-info compact-route-info">
+          <span>OTOMATİK YÖNLENDİRME</span>
+          <p>İlçe + iş türüne göre doğru koordinatöre otomatik gönderilir.</p>
+        </div>
+      </section>
+
+      <section class="panel request-location-panel">
+        <div class="section-title compact"><span class="step">02</span><div><h2>Konum & Harita</h2><p>Adres ve olay konumu.</p></div></div>
+        <div class="form-grid two compact-form-grid">
+          <label>İlçe {{ form.ilce }}</label>
+          <label>Mahalle {{ form.mahalle }}</label>
+          <label class="span2">Cadde / Sokak {{ form.yol }}</label>
+          <div class="span2 manual-road compact-manual-road">
+            <div class="manual-road-title"><span>Cadde / sokak listede yoksa</span><small>Gerçek yol adını yazın.</small></div>
+            {{ form.yol_serbest }}
+            {% if form.yol_serbest.errors %}<div class="form-error">{{ form.yol_serbest.errors }}</div>{% endif %}
+          </div>
+          <label>Kapı No {{ form.kapi_no }}</label>
+          <label class="span2">Adres Tarifi {{ form.adres_aciklama }}</label>
+        </div>
+        {{ form.lat }}{{ form.lng }}
+        <div class="map-toolbar compact-map-toolbar">
+          <button type="button" class="btn small" id="find-address">⌖ Adresi Bul</button>
+          <span id="geo-status">Haritaya tıklayarak konumu netleştirebilirsiniz.</span>
+        </div>
+        <div id="call-map" class="map request-entry-map"></div>
+      </section>
+
+      <div class="request-submit-bar">
+        <div><strong>Talebi oluştur ve yönlendir</strong><small>Kayıt sonrası form yeni çağrı için otomatik temizlenir.</small></div>
+        <button class="btn primary large">Talebi Kaydet ve Yönlendir →</button>
+      </div>
+    </form>
+
+  <section class="v21-callback-center" id="vatandas-bilgilendirme">
+    <header class="v21-center-header">
+      <div>
+        <span class="v21-kicker">185 VATANDAŞ GERİ DÖNÜŞ MERKEZİ</span>
+        <h2>Aranacak Vatandaşlar</h2>
+        <p>Şef onayından geçen işler ince satırlar halinde listelenir. Ayrıntılar yalnız ihtiyaç olduğunda <b>i</b> penceresinden açılır.</p>
+      </div>
+      <div class="v21-summary">
+        <span><b data-feedback-tab-count>{{ stats.geri_toplam }}</b> Aranacak</span>
+        <span><b>{{ stats.geri_tekrar }}</b> Tekrar</span>
+        <span><b>{{ stats.geri_bugun }}</b> Bugün Kapandı</span>
+      </div>
+    </header>
+
+    <div class="feedback-live-notice v14-live" id="feedback-live-notice" hidden>
+      <div><strong>Yeni vatandaş geri dönüşü geldi.</strong><span>Şef onayından geçen kayıt arama kuyruğuna eklendi.</span></div>
+      <a class="btn small" href="#vatandas-bilgilendirme" onclick="window.location.reload()">Kuyruğu Güncelle</a>
+    </div>
+
+    <section class="v21-queue-panel">
+      <div class="v21-queue-head">
+        <div>
+          <span>CANLI ARAMA KUYRUĞU</span>
+          <strong>İnce satırlı çalışma listesi</strong>
+        </div>
+        <small>Sağa / sola kaydırabilirsiniz</small>
+      </div>
+
+      <div class="v21-table-scroll" tabindex="0" aria-label="Vatandaş geri dönüş kuyruğu">
+        <table class="v21-queue-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Talep No</th>
+              <th>Vatandaş</th>
+              <th>Telefon</th>
+              <th>Arıza / Talep</th>
+              <th>İlçe / Mahalle</th>
+              <th>Şef Onayı</th>
+              <th>Durum</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in geri_bildirim_talepleri %}
+            <tr class="{% if t.vatandas_bildirim_durumu == 'tekrar_aranacak' %}retry{% endif %}">
+              <td><span class="v21-order">{{ forloop.counter|stringformat:"02d" }}</span></td>
+              <td><strong class="v21-ticket">{{ t.talep_no }}</strong></td>
+              <td>
+                <div class="v21-person-cell">
+                  <strong>{{ t.vatandas_ad }} {{ t.vatandas_soyad }}</strong>
+                  <button type="button" class="v21-info-btn" data-v21-info-open="{{ t.pk }}" title="Talep ayrıntılarını aç" aria-label="Talep ayrıntılarını aç">i</button>
+                </div>
+              </td>
+              <td><a class="v21-phone" href="tel:{{ t.telefon }}">{{ t.telefon }}</a></td>
+              <td><strong>{{ t.is_alt_turu.ad }}</strong><small>{{ t.is_turu.ad }}</small></td>
+              <td>{{ t.ilce.ad }}<small>{{ t.mahalle.ad }}</small></td>
+              <td>{% if t.sef_onay_tarihi %}{{ t.sef_onay_tarihi|date:"d.m.Y H:i" }}{% else %}-{% endif %}</td>
+              <td>
+                {% if t.vatandas_bildirim_durumu == 'tekrar_aranacak' %}
+                  <span class="v21-status retry">Tekrar aranacak</span>
+                {% else %}
+                  <span class="v21-status waiting">Aranacak</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="v22-row-actions">
+                  <a class="v22-call-btn" href="tel:{{ t.telefon }}" title="Telefon uygulamasında ara">☎ Ara</a>
+                  <button type="button"
+                          class="v22-copy-btn"
+                          data-v22-copy-phone="{{ t.telefon }}"
+                          title="Telefon numarasını panoya kopyala">Kopyala</button>
+                  <button type="button"
+                          class="v22-called-btn"
+                          data-v21-feedback-open="{{ t.pk }}"
+                          data-v22-called-open="{{ t.pk }}"
+                          title="Arama sonucunu kaydet">✓ Arandı</button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="v21-empty">Şef onaylı, aranmayı bekleyen vatandaş bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {% for t in geri_bildirim_talepleri %}
+    <div class="v21-modal" data-v21-info-modal="{{ t.pk }}" hidden>
+      <div class="v21-modal-backdrop" data-v21-close></div>
+      <section class="v21-modal-card v21-info-modal-card" role="dialog" aria-modal="true" aria-label="Talep bilgileri">
+        <header class="v21-modal-header">
+          <div>
+            <span>TALEP BİLGİSİ • {{ t.talep_no }}</span>
+            <h3>{{ t.vatandas_ad }} {{ t.vatandas_soyad }}</h3>
+            <p>{{ t.is_turu.ad }} — {{ t.is_alt_turu.ad }}</p>
+          </div>
+          <button type="button" class="v21-modal-close" data-v21-close aria-label="Kapat">×</button>
+        </header>
+
+        <section class="v38-modal-process" aria-label="Talep süreç takibi">
+          <div class="v38-modal-process-title">Talep Süreci</div>
+          <div class="v38-modal-process-track">
+            {% for adim in t.surec_adimlari %}
+            <div class="v38-modal-process-step {% if adim.tamam %}done{% elif adim.aktif %}current{% endif %}">
+              <span class="v38-modal-process-dot">{% if adim.tamam %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+              <span class="v38-modal-process-name">{{ adim.ad }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <div class="v21-info-columns">
+          <section class="v21-info-block">
+            <h4>Zaman Bilgileri</h4>
+            <dl>
+              <dt>Talep Başlangıç</dt><dd>{{ t.olusturulma_tarihi|date:"d.m.Y H:i" }}</dd>
+              <dt>Koordinatöre Düştü</dt><dd>{% if t.timeline_koordinator %}{{ t.timeline_koordinator.tarih|date:"d.m.Y H:i" }}{% else %}-{% endif %}</dd>
+              <dt>Sahaya Yönlendirildi</dt><dd>{% if t.timeline_saha_atama %}{{ t.timeline_saha_atama.tarih|date:"d.m.Y H:i" }}{% else %}-{% endif %}</dd>
+              <dt>Saha İşi Bitirdi</dt><dd>{% if t.saha_tamam_bildirim_tarihi %}{{ t.saha_tamam_bildirim_tarihi|date:"d.m.Y H:i" }}{% else %}-{% endif %}</dd>
+              <dt>Şef Onayladı</dt><dd>{% if t.sef_onay_tarihi %}{{ t.sef_onay_tarihi|date:"d.m.Y H:i" }}{% else %}-{% endif %}</dd>
+            </dl>
+          </section>
+
+          <section class="v21-info-block">
+            <h4>Vatandaş & Talep</h4>
+            <dl>
+              <dt>Telefon</dt><dd><a href="tel:{{ t.telefon }}">{{ t.telefon }}</a></dd>
+              <dt>E-posta</dt><dd>{{ t.eposta|default:"-" }}</dd>
+              <dt>Öncelik</dt><dd>{{ t.get_oncelik_display }}</dd>
+              <dt>Saha</dt><dd>{% if t.sorumlu_saha %}@{{ t.sorumlu_saha.kullanici.username }}{% else %}-{% endif %}</dd>
+              <dt>Şef</dt><dd>{% if t.sef_onaylayan %}{{ t.sef_onaylayan.get_full_name|default:t.sef_onaylayan.username }}{% else %}-{% endif %}</dd>
+            </dl>
+          </section>
+
+          <section class="v21-info-block">
+            <h4>Konum & Adres</h4>
+            <dl>
+              <dt>İlçe / Mahalle</dt><dd>{{ t.ilce.ad }} / {{ t.mahalle.ad }}</dd>
+              <dt>Cadde / Sokak</dt><dd>{{ t.yol.ad }}{% if t.kapi_no %} • No: {{ t.kapi_no }}{% endif %}</dd>
+              <dt>Adres Tarifi</dt><dd>{{ t.adres_aciklama|default:"-" }}</dd>
+              <dt>Koordinat</dt>
+              <dd>
+                {% if t.lat and t.lng %}
+                <button type="button" class="v21-coordinate-btn" data-v21-map-toggle data-lat="{{ t.lat }}" data-lng="{{ t.lng }}">{{ t.lat }}, {{ t.lng }} • Haritada Aç</button>
+                {% else %}-{% endif %}
+              </dd>
+            </dl>
+          </section>
+        </div>
+
+        <section class="v21-result-strip">
+          <span>SAHA SONUCU</span>
+          <p>{{ t.saha_sonuc_notu|default:"Saha sonuç notu bulunmuyor." }}</p>
+        </section>
+
+        <div class="v21-mini-map" data-v21-mini-map hidden></div>
+
+        <section class="v23-info-survey">
+          <div>
+            <span>VATANDAŞ ANKETİ</span>
+            <strong>Arama sonrası kısa anket otomatik hazırdır.</strong>
+            <small>Bilgi ekranı yalnızca talep detayını gösterir. Anket cevapları arama sonucu ile birlikte kaydedilir.</small>
+          </div>
+          <button type="button" data-v23-open-feedback="{{ t.pk }}">Arama & Anketi Aç</button>
+        </section>
+      </section>
+    </div>
+
+    <div class="v21-modal" data-v21-feedback-modal="{{ t.pk }}" hidden>
+      <div class="v21-modal-backdrop" data-v21-close></div>
+      <section class="v21-modal-card v21-feedback-modal-card" role="dialog" aria-modal="true" aria-label="Vatandaş geri bildirimi">
+        <header class="v21-modal-header">
+          <div>
+            <span>185 GERİ BİLDİRİM • {{ t.talep_no }}</span>
+            <h3>{{ t.vatandas_ad }} {{ t.vatandas_soyad }}</h3>
+            <p><a href="tel:{{ t.telefon }}">{{ t.telefon }}</a> • {{ t.is_alt_turu.ad }}</p>
+          </div>
+          <button type="button" class="v21-modal-close" data-v21-close aria-label="Kapat">×</button>
+        </header>
+
+        {% with attempts=t.vatandas_arama_kayitlari.all %}
+        <div class="v21-history-strip">
+          {% for a in attempts|slice:":5" %}
+          <span><b>{{ a.tarih|date:"d.m H:i" }}</b> {{ a.get_sonuc_display }}{% if a.kullanici %} • @{{ a.kullanici.username }}{% endif %}</span>
+          {% empty %}
+          <span>Henüz geri dönüş kaydı yok.</span>
+          {% endfor %}
+        </div>
+        {% endwith %}
+
+        <form method="post"
+              action="{% url 'dashboard:vatandas_bildirim_kaydet' t.pk %}"
+              class="v19-feedback-form v21-feedback-form"
+              data-v19-feedback-form>
+          {% csrf_token %}
+
+          <div class="v21-form-row">
+            <fieldset class="v17-fieldset v21-result-field">
+              <legend>Görüşme Sonucu</legend>
+              <div class="v17-choice-grid result-grid">
+                <label class="v17-choice success"><input type="radio" name="sonuc" value="bilgilendirildi" required><span><b>Görüşüldü</b></span></label>
+                <label class="v17-choice missed"><input type="radio" name="sonuc" value="ulasilamadi"><span><b>Ulaşılamadı</b></span></label>
+                <label class="v17-choice retry"><input type="radio" name="sonuc" value="tekrar_aranacak"><span><b>Tekrar Aranacak</b></span></label>
+              </div>
+            </fieldset>
+
+            <div class="v19-conversation-fields v21-conversation-fields" data-v19-conversation-fields>
+              <fieldset class="v17-fieldset v21-satisfaction-field">
+                <legend>Genel Memnuniyet</legend>
+                <div class="v17-choice-grid satisfaction-grid">
+                  <label class="v17-rating good"><input type="radio" name="memnuniyet" value="iyi"><span>İyi</span></label>
+                  <label class="v17-rating neutral"><input type="radio" name="memnuniyet" value="normal"><span>Normal</span></label>
+                  <label class="v17-rating bad"><input type="radio" name="memnuniyet" value="kotu"><span>Kötü</span></label>
+                </div>
+              </fieldset>
+              <label class="v17-duration-field v21-duration"><span>İşlem Süresi <small>(dk)</small></span><div><input type="number" name="islem_suresi" min="1" max="1440" inputmode="numeric" placeholder="5"><em>dk</em></div></label>
+            </div>
+          </div>
+
+          <label class="v17-note-field v21-note-field"><span>Görüşme Notu <small>(opsiyonel)</small></span><textarea name="arama_notu" maxlength="300" rows="2" placeholder="Kısa not..."></textarea></label>
+
+          <section class="v23-survey-card" data-v19-survey-section>
+            <div class="v23-survey-head">
+              <div>
+                <span>VATANDAŞ MEMNUNİYET ANKETİ</span>
+                <strong>4 kısa soru</strong>
+              </div>
+              <b>OPSİYONEL</b>
+            </div>
+
+            <div class="v23-survey-grid">
+              <fieldset class="v17-fieldset">
+                <legend>1. Talep tamamen çözüldü mü?</legend>
+                <div class="v17-choice-grid satisfaction-grid">
+                  <label class="v17-rating good"><input type="radio" name="sorun_cozuldu" value="evet"><span>Evet</span></label>
+                  <label class="v17-rating neutral"><input type="radio" name="sorun_cozuldu" value="kismen"><span>Kısmen</span></label>
+                  <label class="v17-rating bad"><input type="radio" name="sorun_cozuldu" value="hayir"><span>Hayır</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="v17-fieldset">
+                <legend>2. Hizmet hızı nasıldı?</legend>
+                <div class="v17-choice-grid satisfaction-grid">
+                  <label class="v17-rating good"><input type="radio" name="hizmet_hizi" value="hizli"><span>Hızlı</span></label>
+                  <label class="v17-rating neutral"><input type="radio" name="hizmet_hizi" value="normal"><span>Normal</span></label>
+                  <label class="v17-rating bad"><input type="radio" name="hizmet_hizi" value="yavas"><span>Yavaş</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="v17-fieldset">
+                <legend>3. Bilgilendirme yeterli miydi?</legend>
+                <div class="v17-choice-grid satisfaction-grid">
+                  <label class="v17-rating good"><input type="radio" name="bilgilendirme" value="yeterli"><span>Yeterli</span></label>
+                  <label class="v17-rating neutral"><input type="radio" name="bilgilendirme" value="kismen"><span>Kısmen</span></label>
+                  <label class="v17-rating bad"><input type="radio" name="bilgilendirme" value="yetersiz"><span>Yetersiz</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="v17-fieldset v23-score">
+                <legend>4. Genel İSU hizmet puanı</legend>
+                <div class="v19-score-grid">
+                  <label><input type="radio" name="genel_puan" value="1"><span>1</span></label>
+                  <label><input type="radio" name="genel_puan" value="2"><span>2</span></label>
+                  <label><input type="radio" name="genel_puan" value="3"><span>3</span></label>
+                  <label><input type="radio" name="genel_puan" value="4"><span>4</span></label>
+                  <label><input type="radio" name="genel_puan" value="5"><span>5</span></label>
+                </div>
+              </fieldset>
+            </div>
+
+            <p class="v23-survey-note">Vatandaş ankete katılmak istemezse bu alanlar boş bırakılabilir.</p>
+          </section>
+
+          <div class="v21-submit-row">
+            <span>Kayıt; talep no, 185 personeli ve tarih/saat ile loglanır.</span>
+            <button type="submit" class="v17-submit v19-submit">Geri Bildirimi Kaydet</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    {% endfor %}
+
+    <details class="v22-archive" id="v22-kapanan-isler">
+      <summary>
+        <div class="v22-archive-title">
+          <span>KAPANAN İŞLER</span>
+          <strong>Vatandaş geri dönüşü tamamlanan kayıtlar</strong>
+        </div>
+        <div class="v22-archive-summary-right">
+          <b>{{ son_bilgilendirilenler|length }} kayıt</b>
+          <span class="v22-chevron" aria-hidden="true">⌄</span>
+        </div>
+      </summary>
+
+      <div class="v22-archive-body">
+        <div class="v22-archive-scroll" tabindex="0" aria-label="Kapanan vatandaş geri dönüşleri">
+          <table class="v22-archive-table">
+            <thead>
+              <tr>
+                <th>Talep</th>
+                <th>Vatandaş</th>
+                <th>Telefon</th>
+                <th>Arıza</th>
+                <th>İlçe</th>
+                <th>Bilgilendiren</th>
+                <th>Kapanış Tarihi</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for t in son_bilgilendirilenler %}
+              <tr>
+                <td><strong>{{ t.talep_no }}</strong></td>
+                <td>{{ t.vatandas_ad }} {{ t.vatandas_soyad }}</td>
+                <td>{{ t.telefon }}</td>
+                <td>{{ t.is_alt_turu.ad }}</td>
+                <td>{{ t.ilce }}</td>
+                <td>{% if t.vatandas_bildirim_yapan %}@{{ t.vatandas_bildirim_yapan.username }}{% else %}-{% endif %}</td>
+                <td>{{ t.vatandas_bildirim_tarihi|date:"d.m.Y H:i" }}</td>
+                <td><a class="v22-detail-link" href="{% url 'dashboard:talep_detay' t.pk %}">Detay →</a></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8" class="v22-empty">Henüz kapanmış vatandaş geri dönüşü yok.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+  </section>
+  </section>
+
+  <section class="call-tab-panel" data-call-panel="list" hidden>
+    <section class="panel request-grid-panel">
+      <div class="panel-head">
+        <div><h2>Talepler</h2><p>Son 50 çağrı kaydı ve operasyon durumu.</p></div>
+        <span class="request-count-pill">{{ stats.toplam }} toplam</span>
+      </div>
+      <div class="table-wrap request-table-wrap">
+        <table class="data-table request-table">
+          <thead><tr><th>Talep</th><th>Tarih</th><th>Vatandaş</th><th>İlçe</th><th>Arıza</th><th>Öncelik</th><th>Durum</th><th></th></tr></thead>
+          <tbody>
+          {% for t in son_talepler %}
+            <tr>
+              <td><strong>{{ t.talep_no }}</strong></td>
+              <td>{{ t.olusturulma_tarihi|date:"d.m.Y H:i" }}</td>
+              <td>{{ t.vatandas_ad }} {{ t.vatandas_soyad }}<small>{{ t.telefon }}</small></td>
+              <td>{{ t.ilce }}<small>{{ t.mahalle.ad }}</small></td>
+              <td>{{ t.is_turu }}<small>{{ t.is_alt_turu.ad }}</small></td>
+              <td><span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span></td>
+              <td><span class="badge status-{{ t.durum }}" data-ticket-status="{{ t.pk }}">{{ t.get_durum_display }}</span></td>
+              <td><a class="btn small" href="{% url 'dashboard:talep_detay' t.pk %}">Detay →</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="8" class="empty">Henüz talep oluşturulmadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+
+</main>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/cagri185_v14.js' %}"></script><script src="{% static 'js/cagri185_v19.js' %}"></script><script src="{% static 'js/cagri185_v21.js' %}"></script><script src="{% static 'js/cagri185_v22.js' %}"></script><script src="{% static 'js/cagri185_v23.js' %}"></script>{% endblock %}

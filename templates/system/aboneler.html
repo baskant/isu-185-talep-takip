@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Aboneler | İSU 185{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/kurumsal_v28.css' %}">{% endblock %}
+{% block body %}
+<div class="system-layout">
+{% include "system/_sidebar.html" %}
+<main class="system-main">
+  <div class="page-heading">
+    <div><span class="eyebrow">ABONE / ABONELİK YÖNETİMİ</span><h1>Aboneler</h1><p>185 çağrılarında abone numarasıyla sorgulanabilecek abonelik kayıtları.</p></div>
+    <div class="v28-mini-kpis"><span><b>{{ toplam }}</b> toplam</span><span><b>{{ aktif }}</b> aktif</span></div>
+  </div>
+
+  <section class="v28-two-col">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Yeni Abone Kaydı</h2><p>Abone numarası tekil tutulur.</p></div></div>
+      <form method="post" class="v28-admin-form">{% csrf_token %}
+        <div class="form-grid two">
+          <label>Abone No {{ form.abone_no }}</label>
+          <label>Sayaç No {{ form.sayac_no }}</label>
+          <label>Ad {{ form.ad }}</label>
+          <label>Soyad {{ form.soyad }}</label>
+          <label>Telefon {{ form.telefon }}</label>
+          <label>E-posta {{ form.eposta }}</label>
+          <label>İlçe {{ form.ilce }}</label>
+          <label>Mahalle {{ form.mahalle }}</label>
+          <label class="span2">Cadde / Sokak {{ form.yol }}</label>
+          <label>Kapı No {{ form.kapi_no }}</label>
+          <label class="span2">Adres Tarifi {{ form.adres_aciklama }}</label>
+          <label class="v28-check">{{ form.aktif }} Aktif abonelik</label>
+        </div>
+        {% if form.errors %}<div class="form-error">{{ form.errors }}</div>{% endif %}
+        <button class="btn primary">Aboneyi Kaydet</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><h2>Abone Listesi</h2><p>Abone no, telefon, sayaç veya ad ile arayın.</p></div></div>
+      <form method="get" class="filter-bar">
+        <input name="q" value="{{ q }}" placeholder="Abone no / ad / telefon / sayaç">
+        <button class="btn">Ara</button>
+        <a class="btn ghost" href="{% url 'dashboard:sistem_aboneler' %}">Temizle</a>
+      </form>
+      <div class="table-wrap v28-abone-table"><table class="data-table">
+        <thead><tr><th>Abone No</th><th>Abone</th><th>Telefon</th><th>Sayaç</th><th>Adres</th><th>Durum</th></tr></thead>
+        <tbody>
+        {% for a in aboneler %}
+          <tr>
+            <td><strong>{{ a.abone_no }}</strong></td>
+            <td>{{ a.ad }} {{ a.soyad }}</td>
+            <td>{{ a.telefon|default:"-" }}</td>
+            <td>{{ a.sayac_no|default:"-" }}</td>
+            <td>{{ a.tam_adres|default:"-" }}</td>
+            <td>{% if a.aktif %}<span class="badge success">Aktif</span>{% else %}<span class="badge">Pasif</span>{% endif %}</td>
+          </tr>
+        {% empty %}<tr><td colspan="6" class="empty">Abone kaydı bulunamadı.</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </section>
+  </section>
+</main>
+</div>
+{% endblock %}

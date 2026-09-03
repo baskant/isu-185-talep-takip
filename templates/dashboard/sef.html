@@ -1,0 +1,310 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Koordinatör Paneli | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/sla_v27.css' %}">
+<link rel="stylesheet" href="{% static 'css/sef_v38.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+{% block body %}
+<main class="workspace-page coordinator-live-page" data-live-coordinator="1">
+  <div class="page-heading coord-heading">
+    <div>
+      <h1>Operasyon Paneli</h1>
+    </div>
+  </div>
+
+  {% if ambar_yetkisi %}
+  <section class="panel" style="margin-bottom:16px;border-left:5px solid #7aa638;display:flex;justify-content:space-between;align-items:center;gap:18px;">
+    <div><span class="eyebrow">EK YETKİ • AMBAR SORUMLUSU</span><h2 style="margin:4px 0 3px;">{{ ambar_yetkisi.ilce.ad }} Ambar Sorumlusu</h2><p style="margin:0;color:#6b7d76;">İlçe sayaç stoğunu, Merkez Ambar taleplerini, teslimleri ve Hurda Ambar yönlendirmelerini yönetebilirsiniz.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;"><a class="btn primary" href="{% url 'abonelik:ambar_yonetimi' %}">Ambar Yönetimi</a></div>
+  </section>
+  {% endif %}
+
+  <div class="stats-grid five">
+    <div class="stat-card danger"><span>Atama Bekleyen</span><strong id="live-count-bekleyen">{{ bekleyen }}</strong></div>
+    <div class="stat-card warn"><span>Sahada</span><strong id="live-count-sahada">{{ sahada }}</strong></div>
+    <div class="stat-card approval"><span>Şef Onayı</span><strong id="live-count-onay">{{ onay_bekleyen }}</strong></div>
+    <div class="stat-card urgent"><span>Acil Açık Talep</span><strong id="live-count-acil">{{ acil }}</strong></div>
+    <div class="stat-card success"><span>Tamamlanan</span><strong id="live-count-tamam">{{ tamam }}</strong></div>
+  </div>
+
+  <section class="sla27-strip">
+    <div class="sla27-strip-main">
+      <div>
+        <span class="sla27-kicker">ATAMA SLA</span>
+      </div>
+      <div class="sla27-rules">
+        <span class="sla27-rule urgent">Acil <b>30 dk</b></span>
+        <span class="sla27-rule high">Yüksek <b>60 dk</b></span>
+        <span class="sla27-rule normal">Normal <b>2 sa</b></span>
+        <span class="sla27-rule low">Düşük <b>4 sa</b></span>
+      </div>
+    </div>
+    <div class="sla27-strip-stats">
+      <span class="sla27-danger"><b>{{ sla_geciken_sayisi }}</b> SLA aşıldı</span>
+      <span class="sla27-warn"><b>{{ sla_yaklasan_sayisi }}</b> süre yaklaşıyor</span>
+    </div>
+  </section>
+
+  <div class="coord-grid top">
+    <section class="panel">
+      <div class="panel-head v37-map-head">
+        <div><h2>Aktif Talep Haritası</h2></div>
+        <div class="legend">
+          <span><i class="dot red"></i>Atama Bekliyor</span>
+          <span><i class="dot orange"></i>Sahada</span>
+          <span><i class="dot purple"></i>Şef Onayı</span>
+        </div>
+      </div>
+      <div id="coord-map" class="map coord-map"></div>
+      {{ harita_json|json_script:"coord-map-data" }}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><h2>Atama Bekleyen Talepler</h2></div></div>
+      <div class="coord-request-list">
+      {% for t in atama_bekleyen %}
+        <div class="coord-request">
+          <div class="coord-request-main">
+            <strong>{{ t.talep_no }}</strong>
+            <span>{{ t.ilce }} • {{ t.mahalle.ad }}</span>
+            <b>{{ t.is_turu }} → {{ t.is_alt_turu }}</b>
+          </div>
+          <div class="coord-request-actions">
+            <span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span>
+            {% if t.sla.durum == "asildi" %}
+              <span class="sla27-badge danger">SLA AŞILDI • {{ t.sla.asma_label }} gecikti</span>
+            {% elif t.sla.durum == "yaklasiyor" %}
+              <span class="sla27-badge warn">Yaklaşıyor • {{ t.sla.kalan_label }} kaldı</span>
+            {% else %}
+              <span class="sla27-badge ok">{{ t.sla.kalan_label }} kaldı</span>
+            {% endif %}
+            {% if t.haritada_var %}<button type="button" class="btn small v37-map-focus" data-map-ticket="{{ t.pk }}">Haritada Gör</button>{% else %}<span class="v37-location-warning">Konum yok</span>{% endif %}
+            <a class="btn small primary" href="{% url 'dashboard:talep_ata' t.pk %}">Sahaya Ata</a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-state-mini">Şu anda saha ataması bekleyen talep yok.</div>
+      {% endfor %}
+      </div>
+    </section>
+  </div>
+
+
+  <section class="panel chief-approval-panel">
+    <div class="panel-head"><div><h2>Onay Bekleyen İşler</h2></div></div>
+
+    <div class="chief-approval-list">
+      {% for t in onay_bekleyen_talepler %}
+      <article class="chief-approval-card">
+        <div class="chief-approval-head">
+          <div>
+            <strong>{{ t.talep_no }}</strong>
+            <span>{{ t.ilce }} / {{ t.mahalle.ad }} • {{ t.is_turu }}</span>
+          </div>
+          <span class="badge status-onay_bekliyor">Şef Onayı Bekliyor</span>
+        </div>
+
+        <div class="chief-approval-grid">
+          <div>
+            <span class="field-label">Saha Ekibi</span>
+            <b>{{ t.sorumlu_saha.kullanici.get_full_name|default:t.sorumlu_saha.kullanici.username }}</b>
+            <small>{{ t.sorumlu_saha.rol.ad }}</small>
+            <div class="field-account-line compact">
+              <span class="field-account-chip">Giriş hesabı: <b>@{{ t.sorumlu_saha.kullanici.username }}</b></span>
+              <button type="button" class="copy-account-btn"
+                      data-copy="{{ t.sorumlu_saha.kullanici.username }}"
+                      onclick="copyFieldAccount(this)">Kopyala</button>
+            </div>
+          </div>
+          <div>
+            <span class="field-label">Saha Tamamlama Bildirimi</span>
+            <b>{{ t.saha_tamam_bildirim_tarihi|date:"d.m.Y H:i" }}</b>
+            <small>Şef kararı bekleniyor</small>
+          </div>
+        </div>
+
+        <div class="field-completion-note">
+          <span class="field-label">Sahanın Sonuç Notu</span>
+          <p>{{ t.saha_sonuc_notu }}</p>
+        </div>
+
+        <div class="chief-approval-actions">
+          <form method="post" action="{% url 'dashboard:sef_tamamla_onayla' t.pk %}"
+                onsubmit="return confirm('Bu işin sahada tamamlandığını onaylıyor musunuz?')">
+            {% csrf_token %}
+            <button class="btn primary">✓ Onayla ve Tamamla</button>
+          </form>
+
+          <details class="chief-return-box">
+            <summary>↩ Aynı Talebi Sahaya Geri Gönder</summary>
+            <form method="post" action="{% url 'dashboard:sef_tamamla_iade' t.pk %}">
+              {% csrf_token %}
+              <div class="same-ticket-note">
+                <strong>{{ t.talep_no }} numarası korunur.</strong>
+                <span>Yeni arıza/talep oluşturulmaz; aynı kayıt mevcut saha ekibine yeniden müdahale için döner.</span>
+              </div>
+              <textarea name="gerekce" rows="2" maxlength="700"
+                        placeholder="Örn. Kontrol sonrası sızıntının devam ettiği görüldü; aynı talep tekrar müdahale için sahaya gönderilsin."
+                        required></textarea>
+              <button class="btn small">↩ Aynı Arıza No ile Sahaya Gönder</button>
+            </form>
+          </details>
+
+          <button type="button" class="row-action v37-map-focus-link" data-map-ticket="{{ t.pk }}">Haritada Gör</button>
+          <a class="row-action" href="{% url 'dashboard:talep_detay' t.pk %}">Hareketleri İncele →</a>
+        </div>
+      </article>
+      {% empty %}
+      <div class="empty-state-mini">Şu anda şef onayı bekleyen tamamlanma bildirimi yok.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel live-operations-panel">
+    <div class="panel-head"><div><h2>Canlı Saha Operasyonları</h2></div></div>
+
+    <div class="live-operation-grid" id="live-operation-grid">
+      {% for t in canli_operasyonlar %}
+      <article class="live-operation-card" data-live-ticket="{{ t.pk }}">
+        <div class="live-op-title">
+          <div>
+            <strong>{{ t.talep_no }}</strong>
+            <span>{{ t.ilce }} / {{ t.mahalle.ad }}</span>
+          </div>
+          <span class="badge status-{{ t.durum }}" data-live-status>{{ t.get_durum_display }}</span>
+        </div>
+
+        <div class="live-op-team">
+          <span class="crew-avatar">{{ t.sorumlu_saha.kullanici.username|slice:":1"|upper }}</span>
+          <div class="live-op-team-main">
+            <strong>{{ t.sorumlu_saha.kullanici.get_full_name|default:t.sorumlu_saha.kullanici.username }}</strong>
+            <small>{{ t.sorumlu_saha.rol.ad }}</small>
+            <div class="field-account-line compact">
+              <span class="field-account-chip">Saha hesabı: <b>@{{ t.sorumlu_saha.kullanici.username }}</b></span>
+              <button type="button" class="copy-account-btn"
+                      data-copy="{{ t.sorumlu_saha.kullanici.username }}"
+                      onclick="copyFieldAccount(this)">Kopyala</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-progress" data-status="{{ t.durum }}">
+          <span class="{% if t.durum != 'sahaya_atandi' %}done{% endif %}">Kabul</span>
+          <span class="{% if t.durum == 'yolda' or t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">Yol</span>
+          <span class="{% if t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">Yerinde</span>
+          <span class="{% if t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">Müdahale</span>
+          <span class="{% if t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">Şef Onayı</span>
+          <span class="{% if t.durum == 'tamamlandi' %}done{% endif %}">Tamam</span>
+        </div>
+
+        {% with last=t.geri_bildirimler.first %}
+        <div class="live-last-movement">
+          <span>Son hareket</span>
+          <p data-live-last>{% if last %}{{ last.mesaj }}{% else %}Saha ataması yapıldı.{% endif %}</p>
+          <small data-live-time>{% if last %}{{ last.tarih|date:"H:i" }}{% endif %}</small>
+        </div>
+        {% endwith %}
+
+        <div class="v37-live-links">
+          <button type="button" class="detail-link v37-map-focus-link" data-map-ticket="{{ t.pk }}">Haritada Gör</button>
+          <a href="{% url 'dashboard:talep_detay' t.pk %}" class="detail-link">Talep hareketlerini aç →</a>
+        </div>
+      </article>
+      {% empty %}
+      <div class="empty-state-mini" id="no-live-operations">Şu anda aktif saha operasyonu yok.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="coord-grid bottom">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Saha Ekipleri</h2></div></div>
+      <div class="crew-grid">
+      {% for p in saha_personelleri %}
+        <div class="crew-card">
+          <span class="crew-avatar">{{ p.kullanici.username|slice:":1"|upper }}</span>
+          <div>
+            <strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong>
+            <small>{{ p.rol.ad }}</small>
+            <div>{% for i in p.yetkili_ilceler.all %}<span class="mini-tag">{{ i.ad }}</span>{% endfor %}</div>
+          </div>
+          <div class="v37-crew-state">
+            {% if p.aktif_operasyon_var %}<span class="badge warn-badge">Operasyonda</span>
+            {% elif not p.musait %}<span class="badge warn-badge">Yeni Görev Kapalı</span>
+            {% else %}<span class="badge success-badge">Yeni Görev Açık</span>{% endif %}
+            <small>{{ p.acik_is_sayisi }} açık iş</small>
+          </div>
+        </div>
+      {% empty %}<div class="empty-state-mini">Atama kurallarına uygun saha personeli bulunmuyor.</div>{% endfor %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><h2>Son Hareketler</h2></div></div>
+      <div class="coord-feedback">
+      {% for g in son_geri_bildirimler %}
+        <a href="{% url 'dashboard:talep_detay' g.talep.pk %}" class="feedback-mini">
+          <span class="feedback-time">{{ g.tarih|date:"H:i" }}</span>
+          <div><strong>{{ g.talep.talep_no }}</strong><p>{{ g.mesaj|truncatechars:100 }}</p><small>{% if g.kullanici %}{{ g.kullanici.username }}{% else %}Sistem{% endif %}</small></div>
+        </a>
+      {% empty %}<div class="empty-state-mini">Henüz sistem hareketi yok.</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="panel coord-table-panel">
+    <div class="panel-head"><div><h2>Talepler</h2></div></div>
+    <form method="get" class="filter-bar">
+      {{ filtre.ara }}{{ filtre.durum }}{{ filtre.oncelik }}{{ filtre.ilce }}{{ filtre.is_turu }}
+      <button class="btn">Filtrele</button>
+    </form>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Talep</th><th>Bölge</th><th>Arıza</th><th>Öncelik</th><th>Durum</th><th>Saha</th><th>İşlem</th></tr></thead>
+      <tbody>
+      {% for t in talepler %}
+        <tr>
+          <td><strong>{{ t.talep_no }}</strong><small>{{ t.olusturulma_tarihi|date:"d.m.Y H:i" }}</small></td>
+          <td>{{ t.ilce }}<small>{{ t.mahalle.ad }}</small></td>
+          <td>{{ t.is_turu }}<small>{{ t.is_alt_turu }}</small></td>
+          <td><span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span></td>
+          <td><span class="badge status-{{ t.durum }}" data-ticket-status="{{ t.pk }}">{{ t.get_durum_display }}</span></td>
+          <td>{% if t.sorumlu_saha %}{{ t.sorumlu_saha }}{% else %}<span class="muted2">Atanmadı</span>{% endif %}</td>
+          <td class="actions-cell">
+            <a class="row-action" href="{% url 'dashboard:talep_detay' t.pk %}">Görüntüle</a>
+            {% if not t.sorumlu_saha %}<a class="btn small primary" href="{% url 'dashboard:talep_ata' t.pk %}">Sahaya Ata</a>{% endif %}
+          </td>
+        </tr>
+      {% empty %}<tr><td colspan="7" class="empty">Yetkinize uygun talep bulunamadı.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/sef_dashboard_v38.js' %}"></script>{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyFieldAccount(button){
+  const value = button.dataset.copy || "";
+  if (!value) return;
+  const done = () => {
+    const oldText = button.textContent;
+    button.textContent = "Kopyalandı";
+    setTimeout(() => button.textContent = oldText, 1200);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(value).then(done);
+  } else {
+    const temp = document.createElement("textarea");
+    temp.value = value;
+    temp.style.position = "fixed";
+    temp.style.opacity = "0";
+    document.body.appendChild(temp);
+    temp.select();
+    try { document.execCommand("copy"); done(); } finally { temp.remove(); }
+  }
+}
+</script>
+{% endblock %}

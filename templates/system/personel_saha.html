@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Personel & Saha Rehberi | İSU 185{% endblock %}
+{% block body %}
+<div class="system-layout">
+{% include "system/_sidebar.html" %}
+<main class="system-main personnel-field-directory">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">ORGANİZASYON REHBERİ</span>
+      <h1>Personel & Saha Bilgileri</h1>
+      <p>Sistem yöneticisi tüm kullanıcıları, 12 ilçenin şef/koordinatörlerini ve saha ekiplerini buradan denetler.</p>
+    </div>
+  </div>
+
+  <div class="stats-grid five">
+    <div class="stat-card"><span>Toplam Kullanıcı</span><strong>{{ toplam_kullanici }}</strong><small>Sistemdeki hesaplar</small></div>
+    <div class="stat-card success"><span>Aktif Kullanıcı</span><strong>{{ aktif_kullanici }}</strong><small>Giriş yapabilir</small></div>
+    <div class="stat-card warn"><span>Şef / Koordinatör</span><strong>{{ sef_sayisi }}</strong><small>Aktif yönetici profili</small></div>
+    <div class="stat-card"><span>Saha Hesabı</span><strong>{{ saha_sayisi }}</strong><small>Aktif operasyon ekibi</small></div>
+    <div class="stat-card"><span>Ambar Sorumlusu</span><strong>{{ ambar_yetki_sayisi }}</strong><small>İlçe bazlı ek yetki</small></div>
+  </div>
+
+  <section class="panel directory-special-users">
+    <div class="panel-head"><div><h2>Merkezi Kullanıcılar</h2><p>Sistem yönetimi ve 185 Çağrı Merkezi hesapları</p></div></div>
+    <div class="central-user-grid">
+      {% for u in superusers %}
+      <div class="central-user-card">
+        <span class="directory-avatar">{{ u.username|slice:":1"|upper }}</span>
+        <div><strong>{{ u.get_full_name|default:u.username }}</strong><small>@{{ u.username }}</small><span>Sistem Yöneticisi</span></div>
+        {% if u.is_active %}<em class="directory-status active">Aktif</em>{% else %}<em class="directory-status passive">Pasif</em>{% endif %}
+      </div>
+      {% endfor %}
+      {% for p in cagrimerkezi %}
+      <div class="central-user-card">
+        <span class="directory-avatar">{{ p.kullanici.username|slice:":1"|upper }}</span>
+        <div>
+          <strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong>
+          <small>@{{ p.kullanici.username }}{% if p.telefon %} • {{ p.telefon }}{% endif %}</small>
+          <span>{{ p.rol.ad }}</span>
+        </div>
+        {% if p.aktif and p.kullanici.is_active %}<em class="directory-status active">Aktif</em>{% else %}<em class="directory-status passive">Pasif</em>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="district-directory-list">
+    {% for x in ilce_kartlari %}
+    <article class="panel district-directory-card" id="ilce-{{ x.ilce.kod }}">
+      <div class="district-directory-header">
+        <div>
+          <span class="eyebrow">İLÇE ORGANİZASYONU</span>
+          <h2>{{ x.ilce.ad }}</h2>
+          {% if x.ambar_yetkisi %}<small style="display:block;margin-top:4px;color:#64766f;">Ambar Sorumlusu: <b>{{ x.ambar_yetkisi.personel.kullanici.get_full_name|default:x.ambar_yetkisi.personel.kullanici.username }}</b></small>{% endif %}
+        </div>
+        <div class="district-directory-kpis">
+          <span><b>{{ x.bekleyen }}</b> bekleyen</span>
+          <span><b>{{ x.aktif_operasyon }}</b> sahada</span>
+          <span><b>{{ x.musait_saha }}</b> müsait ekip</span>
+        </div>
+      </div>
+
+      <div class="district-directory-grid">
+        <section class="district-chief-panel">
+          <h3>Şefler / Koordinatörler</h3>
+          {% for p in x.sefler %}
+          <div class="directory-person-row">
+            <span class="directory-avatar">{{ p.kullanici.username|slice:":1"|upper }}</span>
+            <div class="directory-person-main">
+              <strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong>
+              <small>@{{ p.kullanici.username }} • {{ p.rol.ad }}</small>
+              <div class="directory-contact">
+                {% if p.kullanici.email %}<span>{{ p.kullanici.email }}</span>{% endif %}
+                {% if p.telefon %}<span>{{ p.telefon }}</span>{% endif %}
+                {% if p.sicil_no %}<span>Sicil: {{ p.sicil_no }}</span>{% endif %}
+              </div>
+              <div class="directory-tags">
+                {% for tur in p.uzmanlik_is_turleri.all %}<span class="mini-tag">{{ tur.ad }}</span>{% empty %}<span class="mini-tag">Genel yetki</span>{% endfor %}
+              </div>
+            </div>
+            <div class="directory-person-state">
+              <span class="open-job-count">{{ p.acik_talep_sayisi }} açık talep</span>
+              {% if p.ambar_sorumlusu %}
+                <em class="directory-status active">Ambar Sorumlusu</em>
+              {% else %}
+                <form method="post" action="{% url 'dashboard:ambar_yetkisi_ata' x.ilce.id %}" style="margin:4px 0;">{% csrf_token %}<input type="hidden" name="personel_id" value="{{ p.id }}"><button class="btn small" type="submit">Ambar Yetkisi Ver</button></form>
+              {% endif %}
+              {% if p.aktif and p.kullanici.is_active %}<em class="directory-status active">Aktif</em>{% else %}<em class="directory-status passive">Pasif</em>{% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="directory-empty warning">Bu ilçeye atanmış aktif şef/koordinatör bulunmuyor.</div>
+          {% endfor %}
+        </section>
+
+        <section class="district-field-panel">
+          <h3>Saha Ekipleri</h3>
+          <div class="directory-field-table">
+            {% for p in x.saha %}
+            <div class="directory-field-row">
+              <div>
+                <strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong>
+                <small>@{{ p.kullanici.username }} • {{ p.rol.ad }} • {{ p.rol.get_calisma_kanali_display }}</small>
+              </div>
+              <div class="directory-tags">
+                {% for tur in p.uzmanlik_is_turleri.all %}<span class="mini-tag">{{ tur.ad }}</span>{% empty %}<span class="mini-tag">Genel / fallback</span>{% endfor %}
+              </div>
+              <div class="field-directory-state">
+                {% if p.aktif_gorev_sayisi %}
+                  <span class="badge warn-badge">Görevde • {{ p.aktif_gorev_sayisi }}</span>
+                {% elif p.operasyon_musait %}
+                  <span class="badge success-badge">Müsait</span>
+                {% elif not p.aktif or not p.kullanici.is_active %}
+                  <span class="badge neutral-badge">Pasif</span>
+                {% else %}
+                  <span class="badge neutral-badge">Yeni görev kapalı</span>
+                {% endif %}
+              </div>
+            </div>
+            {% empty %}
+            <div class="directory-empty warning">Bu ilçeye bağlı saha hesabı bulunmuyor.</div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+</main>
+</div>
+{% endblock %}

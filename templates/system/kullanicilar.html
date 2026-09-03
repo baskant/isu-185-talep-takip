@@ -1,0 +1,153 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Kullanıcılar | İSU 185{% endblock %}
+{% block body %}
+<div class="system-layout">
+{% include "system/_sidebar.html" %}
+<main class="system-main">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">ORGANİZASYON</span>
+      <h1>Kullanıcılar</h1>
+      <p>Yeni personel ve otomatik organizasyon işlemleri tek kayıt alanından yönetilir.</p>
+    </div>
+  </div>
+
+  {% if generated %}
+  <section class="panel highlight-panel">
+    <h2>Oluşturulan Hesaplar</h2>
+    <p class="hint">Geçici şifreleri şimdi kaydedin; bu liste sonraki açılışta gösterilmez.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kullanıcı</th><th>Geçici Şifre</th><th>Rol</th><th>Çalışma Kanalı</th><th>İlçe</th><th>Uzmanlık</th></tr></thead>
+        <tbody>
+        {% for x in generated %}
+          <tr>
+            <td><strong>{{ x.username }}</strong></td>
+            <td><code>{{ x.password }}</code></td>
+            <td>{{ x.rol }}</td>
+            <td><span class="mini-tag">{{ x.kanal|default:"Rol ayarı" }}</span></td>
+            <td>{{ x.ilce|default:"-" }}</td>
+            <td>{{ x.uzmanlik|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="panel unified-record-panel">
+    <div class="panel-head">
+      <div>
+        <span class="eyebrow">TEK KAYIT ALANI</span>
+        <h2>Kayıt Ekle</h2>
+        <p>Önce kayıt alanını seçin. Otomatik organizasyon veya tek personel kaydı aynı grid üzerinden yapılır.</p>
+      </div>
+    </div>
+
+    <form method="post" class="unified-record-form" id="organization-record-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+
+      <div class="record-destination">
+        <label>{{ form.kayit_alani.label }} {{ form.kayit_alani }}</label>
+        {% if form.kayit_alani.errors %}<div class="form-error">{{ form.kayit_alani.errors }}</div>{% endif %}
+        <div class="record-help" id="record-help">
+          Kayıt türünü seçtiğinizde gerekli alanlar burada açılır.
+        </div>
+      </div>
+
+      <div class="auto-organization-note" id="auto-organization-note" hidden>
+        <strong>Otomatik Organizasyon</strong>
+        <p>Sistem 12 ilçeyi kontrol eder; eksik koordinatörleri, uzman saha ekiplerini, ilçe ilişkilerini ve uzmanlıklarını algoritmayla tamamlar. Var olan hesaplara dokunmaz.</p>
+      </div>
+
+      <div class="person-record-fields" id="person-record-fields">
+        <div class="form-grid two">
+          <label>{{ form.kullanici_adi.label }} {{ form.kullanici_adi }}</label>
+          <label>{{ form.gecici_sifre.label }} {{ form.gecici_sifre }}<small>Boş bırakılırsa sistem üretir.</small></label>
+          <label>{{ form.ad.label }} {{ form.ad }}</label>
+          <label>{{ form.soyad.label }} {{ form.soyad }}</label>
+          <label>{{ form.eposta.label }} {{ form.eposta }}</label>
+          <label>{{ form.telefon.label }} {{ form.telefon }}</label>
+          <label>{{ form.sicil_no.label }} {{ form.sicil_no }}</label>
+        </div>
+
+        <div class="form-grid two record-scope-grid">
+          <label>
+            {{ form.yetkili_ilceler.label }}
+            {{ form.yetkili_ilceler }}
+            <small>Koordinatör ve saha personelinde bölge yetkisini belirler.</small>
+          </label>
+          <label>
+            {{ form.uzmanlik_is_turleri.label }}
+            {{ form.uzmanlik_is_turleri }}
+            <small>Saha rolü seçilip boş bırakılırsa rolün varsayılan uzmanlığı otomatik atanır.</small>
+          </label>
+        </div>
+
+        {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+          {% if field.name != "kayit_alani" and field.errors %}
+            <div class="form-error"><strong>{{ field.label }}:</strong> {{ field.errors }}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <button class="btn primary large record-submit" id="record-submit">
+        Kaydı Oluştur
+      </button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Operasyonel Saha Modeli</h2>
+        <p>İlçe + rol + uzmanlık ilişkisi atama algoritmasının temelidir.</p>
+      </div>
+    </div>
+    <div class="field-role-grid">
+      {% for bp in saha_blueprints %}
+      <div class="field-role-item">
+        <span class="field-role-icon">↳</span>
+        <div>
+          <strong>{{ bp.ad }}</strong>
+          <small>{{ bp.aciklama }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>Personel Listesi</h2><p>Mevcut rol, ilçe, uzmanlık ve müsaitlik kayıtları</p></div></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Personel</th><th>Rol</th><th>Çalışma Kanalı</th><th>İlçeler</th><th>Uzmanlık</th><th>Müsait</th><th>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for p in personeller %}
+          <tr>
+            <td><strong>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</strong><small>@{{ p.kullanici.username }}</small></td>
+            <td>{{ p.rol.ad }}</td>
+            <td><span class="badge {% if p.rol.calisma_kanali == 'mobil' %}success-badge{% else %}neutral-badge{% endif %}">{{ p.rol.get_calisma_kanali_display }}</span></td>
+            <td>{% for x in p.yetkili_ilceler.all %}<span class="mini-tag">{{ x.ad }}</span>{% empty %}-{% endfor %}</td>
+            <td>{% for x in p.uzmanlik_is_turleri.all %}<span class="mini-tag">{{ x.ad }}</span>{% empty %}<span class="mini-tag">Genel</span>{% endfor %}</td>
+            <td>{% if p.musait %}<span class="badge success-badge">Müsait</span>{% else %}<span class="badge warn-badge">Meşgul</span>{% endif %}</td>
+            <td>{% if p.aktif %}<span class="badge success-badge">Aktif</span>{% else %}<span class="badge neutral-badge">Pasif</span>{% endif %}</td>
+            <td>
+  <form method="post" action="{% url 'dashboard:personel_toggle' p.pk %}" class="inline-form">
+    {% csrf_token %}
+    <button class="row-action button-link" type="submit">{% if p.aktif %}Pasife Al{% else %}Aktifleştir{% endif %}</button>
+  </form>
+</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/system_users.js' %}"></script>{% endblock %}

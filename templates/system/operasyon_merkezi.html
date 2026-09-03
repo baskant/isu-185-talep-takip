@@ -1,0 +1,78 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Operasyon Merkezi | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="{% static 'css/v31_all_features.css' %}">
+{% endblock %}
+{% block body %}
+<div class="system-layout">
+{% include "system/_sidebar.html" %}
+<main class="system-main v31-ops">
+  <div class="page-heading">
+    <div><span class="eyebrow">CANLI OPERASYON KONTROL MERKEZİ</span><h1>Saha Operasyonları</h1></div>
+  </div>
+
+  <div class="v31-ops-kpis">
+    <article><span>Aktif İş Emri</span><strong>{{ kpi.aktif }}</strong></article>
+    <article class="urgent"><span>Acil</span><strong>{{ kpi.acil }}</strong></article>
+    <article><span>Aktif Sahada</span><strong>{{ kpi.sahada }}</strong></article>
+    <article class="approval"><span>Şef Onayı</span><strong>{{ kpi.onay }}</strong></article>
+    <article><span>Müsait</span><strong>{{ kpi.musait }}</strong></article>
+    <article class="danger"><span>SLA Geciken</span><strong>{{ kpi.geciken }}</strong></article>
+  </div>
+
+  <section class="panel v31-map-panel">
+    <div class="panel-head"><div><h2>Aktif İş Emri Haritası</h2></div></div>
+    <div id="v31-ops-map"></div>
+  </section>
+
+  <div class="v31-ops-grid">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Geciken / Yaklaşan Atamalar</h2></div></div>
+      <div class="v31-alert-list">
+        {% for x in geciken %}<a href="{% url 'dashboard:talep_detay' x.talep.pk %}" class="late"><strong>{{ x.talep.talep_no }}</strong><span>{{ x.talep.ilce }} • {{ x.talep.is_turu }}</span><b>+{{ x.sla.asma_dakika }} dk</b></a>{% endfor %}
+        {% for x in yaklasan %}<a href="{% url 'dashboard:talep_detay' x.talep.pk %}" class="near"><strong>{{ x.talep.talep_no }}</strong><span>{{ x.talep.ilce }} • {{ x.talep.is_turu }}</span><b>{{ x.sla.kalan_dakika }} dk kaldı</b></a>{% endfor %}
+        {% if not geciken and not yaklasan %}<p class="empty">Şu anda SLA uyarısı yok.</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><h2>İlçe Yoğunluğu</h2></div></div>
+      <div class="v31-district-list">
+        {% for x in ilce_yogunluk %}<div><strong>{{ x.ilce }}</strong><span>{{ x.aktif }} aktif</span><b>{{ x.acil }} acil</b></div>{% empty %}<p>Aktif iş yok.</p>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>Saha Ekipleri</h2><p>Rol, çalışma kanalı, müsaitlik ve mevcut iş yükü</p></div></div>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Ekip</th><th>Rol</th><th>Kanal</th><th>Müsaitlik</th><th>Açık İş</th><th>Acil</th><th>Aktif İş Emri</th></tr></thead>
+      <tbody>{% for x in ekipler %}<tr>
+        <td><strong>{{ x.profil.kullanici.get_full_name|default:x.profil.kullanici.username }}</strong><small>@{{ x.profil.kullanici.username }}</small></td>
+        <td>{{ x.profil.rol.ad }}</td><td>{{ x.profil.rol.get_calisma_kanali_display }}</td>
+        <td>{% if x.profil.musait %}<span class="badge success-badge">Müsait</span>{% else %}<span class="badge warn-badge">Meşgul</span>{% endif %}</td>
+        <td>{{ x.acik }}</td><td>{{ x.acil }}</td>
+        <td>{% if x.son_is %}<a href="{% url 'dashboard:is_emri_detay' x.son_is.pk %}">{{ x.son_is.is_emri_no }}</a>{% else %}-{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>Aktif İş Emirleri</h2><p>Canlı operasyon listesi</p></div></div>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>İş Emri</th><th>İlçe</th><th>İş</th><th>Öncelik</th><th>Ekip</th><th>Durum</th><th>Atama</th></tr></thead>
+      <tbody>{% for e in aktif_emirler %}<tr>
+        <td><a href="{% url 'dashboard:is_emri_detay' e.pk %}"><strong>{{ e.is_emri_no }}</strong></a><small>{{ e.talep.talep_no }}</small></td>
+        <td>{{ e.talep.ilce }}</td><td>{{ e.talep.is_turu }}<small>{{ e.talep.is_alt_turu }}</small></td>
+        <td><span class="badge priority-{{ e.talep.oncelik }}">{{ e.talep.get_oncelik_display }}</span></td>
+        <td>{% if e.atanan_saha %}{{ e.atanan_saha.kullanici.get_full_name|default:e.atanan_saha.kullanici.username }}{% else %}-{% endif %}</td>
+        <td>{{ e.get_durum_display }}</td><td>{{ e.atama_tarihi|date:"d.m H:i" }}</td>
+      </tr>{% empty %}<tr><td colspan="7">Aktif iş emri yok.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+</main></div>
+{{ harita_json|json_script:"v31-map-data" }}
+<script src="{% static 'js/operations_center_v31.js' %}"></script>
+{% endblock %}

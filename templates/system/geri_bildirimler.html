@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}Hareket Akışı | İSU 185{% endblock %}
+{% block body %}
+<div class="system-layout">
+  {% include "system/_sidebar.html" %}
+  <main class="system-main">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">OTOMATİK OPERASYON KAYDI</span>
+        <h1>Hareket Akışı</h1>
+        <p>185 → Koordinatör → Saha zincirindeki hareketler sistem tarafından otomatik oluşturulur. Manuel giriş kapalıdır.</p>
+      </div>
+    </div>
+    <section class="panel timeline-master">
+      {% for g in items %}
+        <div class="timeline-row">
+          <span class="timeline-dot"></span>
+          <div class="timeline-card">
+            <div><strong>{{ g.talep.talep_no }}</strong><span>{{ g.tarih|date:"d.m.Y H:i:s" }}</span></div>
+            <p>{{ g.mesaj }}</p>
+            <small>{% if g.kullanici %}İşlemi yapan: {{ g.kullanici.username }}{% else %}Sistem{% endif %} • {{ g.talep.get_durum_display }}</small>
+          </div>
+        </div>
+      {% empty %}<div class="empty">Henüz sistem hareketi yok.</div>{% endfor %}
+    </section>
+  </main>
+</div>
+{% endblock %}

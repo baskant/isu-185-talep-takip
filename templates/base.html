@@ -1,0 +1,27 @@
+{% load static %}
+<!doctype html><html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}İSU 185{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% block head %}{% endblock %}
+<link rel="stylesheet" href="{% static 'css/v34_ui_polish.css' %}">
+<link rel="stylesheet" href="{% static 'css/v44_ui_sade.css' %}">
+<link rel="stylesheet" href="{% static 'css/v45_ui_sade.css' %}">
+</head><body><div class="app-shell">
+{% if user.is_authenticated %}
+<header class="topbar">
+<a class="brand-mini" href="{% url 'dashboard:home' %}"><span class="brand-mark">185</span><span><strong>İSU Talep Takip</strong><small>Bilgi İşlem Müdürlüğü</small></span></a>
+<div class="top-actions">
+{% if global_profil %}<span class="role-pill">{{ global_profil.rol.ad }}</span>{% elif user.is_superuser %}<span class="role-pill">Sistem Yöneticisi</span>{% endif %}
+<form method="post" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}<button class="logout-btn" title="Çıkış">Çıkış</button></form>
+</div></header>
+{% endif %}
+{% if messages %}<div class="toast-stack">{% for message in messages %}<div class="toast {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+{% block body %}{% endblock %}
+{% if user.is_authenticated and user.is_superuser %}
+<details class="global-log"><summary><span>İşlem Logları</span><small>Son hareketler • Aç / Kapat</small></summary>
+<div class="global-log-body"><div class="table-wrap"><table class="compact"><thead><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Talep</th><th>Açıklama</th></tr></thead><tbody>
+{% for l in global_loglar %}<tr><td>{{ l.tarih|date:"d.m.Y H:i:s" }}</td><td>{% if l.kullanici %}{{ l.kullanici.username }}{% else %}Sistem{% endif %}</td><td><span class="code-pill">{{ l.islem }}</span></td><td>{% if l.talep %}<a href="{% url 'dashboard:talep_detay' l.talep.pk %}">{{ l.talep.talep_no }}</a>{% else %}-{% endif %}</td><td>{{ l.aciklama }}</td></tr>{% empty %}<tr><td colspan="5">Henüz log yok.</td></tr>{% endfor %}
+</tbody></table></div></div></details>
+{% endif %}
+</div>{% block scripts %}{% endblock %}</body></html>

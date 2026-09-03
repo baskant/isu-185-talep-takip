@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% load static %}{% block title %}Talepler | İSU 185{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/sla_v27.css' %}">{% endblock %}
+{% block body %}<div class="system-layout">{% include "system/_sidebar.html" %}<main class="system-main">
+<div class="page-heading"><div><span class="eyebrow">TALEP YÖNETİMİ</span><h1>Tüm Talepler</h1><p>Arama, filtreleme, operasyon ve vatandaş kapanış takibi.</p></div></div>
+<section class="panel"><form method="get" class="filter-bar">{{ filtre.ara }}{{ filtre.durum }}{{ filtre.oncelik }}{{ filtre.ilce }}{{ filtre.is_turu }}<button class="btn">Filtrele</button><a class="btn ghost" href="{% url 'dashboard:sistem_talepler' %}">Temizle</a></form>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Talep No</th><th>Tarih</th><th>İlçe / Mahalle</th><th>Arıza</th><th>Öncelik</th><th>SLA</th><th>Durum</th><th>Vatandaş</th><th>Saha</th><th></th></tr></thead><tbody>
+{% for t in talepler %}<tr><td><strong>{{ t.talep_no }}</strong></td><td>{{ t.olusturulma_tarihi|date:"d.m.Y H:i" }}</td><td>{{ t.ilce }}<small>{{ t.mahalle.ad }}</small></td><td>{{ t.is_turu }}<small>{{ t.is_alt_turu }}</small></td><td><span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span></td><td>
+{% if t.sla.durum == "asildi" %}<span class="sla27-badge danger">{{ t.sla.asma_dakika }} dk gecikti</span>
+{% elif t.sla.durum == "yaklasiyor" %}<span class="sla27-badge warn">{{ t.sla.kalan_dakika }} dk kaldı</span>
+{% elif t.sla.durum == "uygun" %}<span class="sla27-badge ok">{{ t.sla.kalan_dakika }} dk kaldı</span>
+{% else %}<span class="muted2">-</span>{% endif %}
+</td><td><span class="badge status-{{ t.durum }}">{{ t.get_durum_display }}</span></td><td>{% if t.durum == "tamamlandi" %}<span class="badge callback-status-{{ t.vatandas_bildirim_durumu }}">{{ t.get_vatandas_bildirim_durumu_display }}</span>{% else %}<span class="muted2">-</span>{% endif %}</td>
+<td>{% if t.sorumlu_saha %}{{ t.sorumlu_saha }}{% else %}-{% endif %}</td><td><a class="row-action" href="{% url 'dashboard:talep_detay' t.pk %}">Detay →</a></td></tr>{% empty %}<tr><td colspan="10" class="empty">Kayıt bulunamadı.</td></tr>{% endfor %}
+</tbody></table></div></section></main></div>{% endblock %}

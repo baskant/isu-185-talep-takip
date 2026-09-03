@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Giriş | İSU 185{% endblock %}
+{% block body %}<main class="login-page">
+<section class="login-visual"><div class="login-badge">İSU • 185</div><h1>Kurumsal işlemler<br>tek merkezde.</h1><p>185 arıza, saha operasyonu, vatandaş devir başvurusu ve sayaç ambar süreçlerinin rol bazlı ve kayıtlı yönetimi.</p><div class="flow-preview"><span>185</span><b>•</b><span>Devir</span><b>•</b><span>Ambar</span><b>•</b><span>Saha</span></div></section>
+<section class="login-panel"><div class="login-card"><div class="logo-circle">185</div><h2>Sisteme Giriş</h2><p>Yetkili personel hesabınızla devam edin.</p><form method="post" class="form-stack">{% csrf_token %}<label>Kullanıcı adı {{ form.username }}</label><label>Şifre {{ form.password }}</label>{% if form.errors %}<div class="form-error">Kullanıcı adı veya şifre hatalı.</div>{% endif %}<button class="btn primary full">Giriş Yap</button></form></div></section>
+</main>{% endblock %}

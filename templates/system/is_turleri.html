@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block title %}İş Türleri | İSU 185{% endblock %}
+{% block body %}<div class="system-layout">{% include "system/_sidebar.html" %}<main class="system-main">
+<div class="page-heading"><div><span class="eyebrow">ARIZA TANIMLARI</span><h1>İş Türleri & Alt Türleri</h1><p>185 ekranındaki bağımlı seçimler ve iş emri fotoğraf kuralları bu veriden yönetilir.</p></div></div>
+<div class="two-col"><section class="panel">
+{% for t in turler %}
+<div class="type-group"><div class="type-head"><strong>{{ t.ad }}</strong><span class="badge success-badge">Aktif</span></div>
+<div class="subtypes v42-subtype-list">
+{% for a in t.alt_turler.all %}
+<details class="v42-subtype-rule">
+  <summary><span>{{ a.ad }}</span><b>{{ a.zorunlu_fotograf_sayisi }} zorunlu fotoğraf</b></summary>
+  <form method="post" class="form-grid v42-rule-form">
+    {% csrf_token %}<input type="hidden" name="action" value="foto_kurali"><input type="hidden" name="alt_id" value="{{ a.pk }}">
+    <label>Zorunlu Fotoğraf Sayısı<input type="number" name="zorunlu_fotograf_sayisi" min="1" max="8" value="{{ a.zorunlu_fotograf_sayisi }}" required></label>
+    <label>Fotoğraf Adları<textarea name="fotograf_etiketleri" rows="4" placeholder="Her satıra bir görsel adı">{{ a.fotograf_etiketleri }}</textarea></label>
+    <button class="btn small">Fotoğraf Kuralını Kaydet</button>
+  </form>
+</details>
+{% empty %}<em>Alt tür yok</em>{% endfor %}
+</div></div>{% endfor %}
+</section>
+<section class="stacked-panels"><div class="panel"><h2>İş Türü Ekle</h2><form method="post" class="form-grid">{% csrf_token %}<input type="hidden" name="action" value="tur">{{ form.as_p }}<button class="btn primary">Kaydet</button></form></div><div class="panel"><h2>Alt Tür Ekle</h2><form method="post" class="form-grid">{% csrf_token %}<input type="hidden" name="action" value="alt">{{ alt_form.as_p }}<button class="btn">Kaydet</button></form></div></section></div></main></div>
+<style>
+.v42-subtype-list{display:grid;gap:8px}.v42-subtype-rule{border:1px solid #dfe8df;border-radius:10px;background:#fbfdfb;overflow:hidden}.v42-subtype-rule summary{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none}.v42-subtype-rule summary::-webkit-details-marker{display:none}.v42-subtype-rule summary b{font-size:11px;color:#355d46;background:#edf5e8;padding:5px 8px;border-radius:999px;white-space:nowrap}.v42-rule-form{padding:12px;border-top:1px solid #e6ece6}.v42-rule-form label{display:grid;gap:5px;font-weight:700}.v42-rule-form input,.v42-rule-form textarea{width:100%;box-sizing:border-box}
+</style>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{{ talep.talep_no }} | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+{% block body %}
+<main class="workspace-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">TALEP DETAYI</span>
+      <h1>{{ talep.talep_no }}</h1>
+      <p>{{ talep.olusturulma_tarihi|date:"d.m.Y H:i" }}</p>
+    </div>
+    <span class="badge large status-{{ talep.durum }}">{{ talep.get_durum_display }}</span>
+  </div>
+
+  <div class="detail-grid">
+    <section class="panel">
+      <h2>Vatandaş & Adres</h2>
+      <dl class="detail-list">
+        <dt>Ad Soyad</dt><dd>{{ talep.vatandas_ad }} {{ talep.vatandas_soyad }}</dd>
+        <dt>Telefon</dt><dd>{{ talep.telefon }}</dd>
+        <dt>İlçe</dt><dd>{{ talep.ilce }}</dd>
+        <dt>Mahalle</dt><dd>{{ talep.mahalle.ad }}</dd>
+        <dt>Yol</dt><dd>{{ talep.yol.ad }} {{ talep.kapi_no }}</dd>
+      </dl>
+      {% if talep.lat and talep.lng %}<div id="detail-map" class="map small-map" data-lat="{{ talep.lat }}" data-lng="{{ talep.lng }}"></div>{% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Arıza & Atama</h2>
+      <dl class="detail-list">
+        <dt>İş Türü</dt><dd>{{ talep.is_turu }}</dd>
+        <dt>Alt Tür</dt><dd>{{ talep.is_alt_turu }}</dd>
+        <dt>Öncelik</dt><dd>{{ talep.get_oncelik_display }}</dd>
+        <dt>Açıklama</dt><dd>{{ talep.aciklama }}</dd>
+        <dt>Koordinatör</dt><dd>{{ talep.sorumlu_koordinator|default:"-" }}</dd>
+        <dt>Saha</dt><dd>{{ talep.sorumlu_saha|default:"-" }}</dd>
+        {% if talep.sorumlu_saha %}
+        <dt>Saha Giriş Hesabı</dt><dd>@{{ talep.sorumlu_saha.kullanici.username }}</dd>
+        {% endif %}
+        {% if talep.saha_sonuc_notu %}
+        <dt>Saha Sonuç Notu</dt><dd>{{ talep.saha_sonuc_notu }}</dd>
+        {% endif %}
+        {% if talep.saha_tamam_bildirim_tarihi %}
+        <dt>Saha Bitiş Bildirimi</dt><dd>{{ talep.saha_tamam_bildirim_tarihi|date:"d.m.Y H:i" }}</dd>
+        {% endif %}
+        {% if talep.sef_onaylayan %}
+        <dt>Şef Onayı</dt><dd>{{ talep.sef_onaylayan.get_full_name|default:talep.sef_onaylayan.username }} • {{ talep.sef_onay_tarihi|date:"d.m.Y H:i" }}</dd>
+        {% endif %}
+        {% if talep.durum == "tamamlandi" %}
+        <dt>Vatandaş Bilgilendirme</dt>
+        <dd><span class="badge callback-status-{{ talep.vatandas_bildirim_durumu }}">{{ talep.get_vatandas_bildirim_durumu_display }}</span></dd>
+        {% endif %}
+        {% if talep.vatandas_bildirim_tarihi %}
+        <dt>Vatandaş Arama Kapanışı</dt>
+        <dd>{{ talep.vatandas_bildirim_tarihi|date:"d.m.Y H:i" }}{% if talep.vatandas_bildirim_yapan %} • {{ talep.vatandas_bildirim_yapan.username }}{% endif %}</dd>
+        {% endif %}
+      </dl>
+      {% if global_profil and global_profil.rol.panel_tipi == "sef" and not talep.sorumlu_saha %}
+        <a class="btn primary full" href="{% url 'dashboard:talep_ata' talep.pk %}">Sahaya Ata</a>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="panel automatic-flow-panel">
+    <div class="panel-head">
+      <div>
+        <span class="eyebrow">SİSTEM TARAFINDAN OLUŞTURULUR</span>
+        <h2>Otomatik Hareket Akışı</h2>
+        <p>Talebin oluşturulması, yönlendirilmesi, saha ataması ve durum değişiklikleri otomatik kaydedilir. Bu alana kullanıcı mesaj yazamaz.</p>
+      </div>
+    </div>
+    <div id="timeline" data-url="{% url 'talepler:timeline' talep.pk %}" class="timeline"></div>
+  </section>
+
+
+  {% if talep.vatandas_arama_kayitlari.all %}
+  <details class="panel collapsible-table citizen-call-history">
+    <summary>
+      <div><strong>Vatandaş Arama Geçmişi</strong><small>185 Çağrı Merkezi görüşme sonucu, memnuniyet ve işlem süresi kayıtları</small></div>
+      <span>Aç / Kapat</span>
+    </summary>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Tarih</th><th>185 Personeli</th><th>Sonuç</th><th>İç Not</th></tr></thead>
+        <tbody>
+        {% for a in talep.vatandas_arama_kayitlari.all %}
+          <tr>
+            <td>{{ a.tarih|date:"d.m.Y H:i" }}</td>
+            <td>{% if a.kullanici %}{{ a.kullanici.username }}{% else %}Sistem{% endif %}</td>
+            <td><span class="badge callback-attempt-{{ a.sonuc }}">{{ a.get_sonuc_display }}</span></td>
+            <td>{{ a.not_metni|default:"-" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+  {% endif %}
+
+  <details class="panel collapsible-table">
+    <summary><div><strong>Bu Talebin İşlem Logları</strong><small>Teknik denetim kaydı</small></div><span>Aç / Kapat</span></summary>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Açıklama</th><th>Eski → Yeni</th></tr></thead>
+      <tbody>{% for l in talep.loglar.all %}<tr><td>{{ l.tarih|date:"d.m.Y H:i:s" }}</td><td>{% if l.kullanici %}{{ l.kullanici.username }}{% else %}Sistem{% endif %}</td><td><span class="code-pill">{{ l.islem }}</span></td><td>{{ l.aciklama }}</td><td>{{ l.eski_deger }}{% if l.eski_deger or l.yeni_deger %} → {% endif %}{{ l.yeni_deger }}</td></tr>{% empty %}<tr><td colspan="5">Henüz işlem logu yok.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </details>
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/talep_detail.js' %}"></script>{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Otomatik Operasyon Raporu | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="{% static 'css/reports_v16.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="system-layout">
+  {% include "system/_sidebar.html" %}
+  <main class="system-main report-v16" data-report-version="{{ rapor_version }}" data-live-url="{% url 'dashboard:sistem_rapor_canli' %}">
+    <header class="r16-heading">
+      <div>
+        <span class="eyebrow">OTOMATİK OPERASYON RAPORU</span>
+        <h1>İş Listesi & Bölgesel Arıza Analizi</h1>
+        <p>Manuel veri girişi yoktur. Talep ve operasyon hareketleri değiştikçe bu ekran sistem kayıtlarından otomatik güncellenir.</p>
+      </div>
+      <div class="r16-heading-actions">
+        <div class="r16-live-chip">
+          <i></i>
+          <div><strong>CANLI RAPOR</strong><span id="r16-last-check">Son veri: {{ rapor_zamani|date:"H:i:s" }}</span></div>
+        </div>
+        <a class="btn" href="{% url 'dashboard:rapor_csv' %}">CSV İş Listesi</a>
+      </div>
+    </header>
+
+    <section class="r16-kpis">
+      <article><span>Toplam Talep</span><strong>{{ toplam }}</strong><small>Sistemdeki tüm iş kayıtları</small></article>
+      <article class="waiting"><span>Yeni / Bekleyen</span><strong>{{ yeni }}</strong><small>Koordinatör / atama aşaması</small></article>
+      <article class="field"><span>Sahada</span><strong>{{ sahada }}</strong><small>Aktif saha operasyonu</small></article>
+      <article class="approval"><span>Şef Onayı</span><strong>{{ onay }}</strong><small>Saha bitirdi, kontrol bekliyor</small></article>
+      <article class="complete"><span>Tamamlandı</span><strong>{{ tamam }}</strong><small>%{{ tamamlanma_orani }} tamamlanma</small></article>
+      <article class="callback"><span>185 Geri Dönüş</span><strong>{{ geri_bekleyen }}</strong><small>Vatandaş aranmayı bekliyor</small></article>
+    </section>
+
+    <section class="r16-hotspots">
+      <article>
+        <span>EN YOĞUN İLÇE</span>
+        <strong>{% if en_yogun_ilce %}{{ en_yogun_ilce.ilce__ad }}{% else %}-{% endif %}</strong>
+        <small>{% if en_yogun_ilce %}{{ en_yogun_ilce.adet }} talep • {{ en_yogun_ilce.aktif }} aktif{% else %}Henüz veri yok{% endif %}</small>
+      </article>
+      <article>
+        <span>EN YOĞUN MAHALLE</span>
+        <strong>{% if en_yogun_mahalle %}{{ en_yogun_mahalle.mahalle__ad }}{% else %}-{% endif %}</strong>
+        <small>{% if en_yogun_mahalle %}{{ en_yogun_mahalle.ilce__ad }} • {{ en_yogun_mahalle.adet }} talep{% else %}Henüz veri yok{% endif %}</small>
+      </article>
+      <article>
+        <span>EN YOĞUN CADDE / SOKAK</span>
+        <strong>{% if en_yogun_yol %}{{ en_yogun_yol.yol__ad }}{% else %}-{% endif %}</strong>
+        <small>{% if en_yogun_yol %}{{ en_yogun_yol.ilce__ad }} / {{ en_yogun_yol.mahalle__ad }} • {{ en_yogun_yol.adet }} talep{% else %}Henüz veri yok{% endif %}</small>
+      </article>
+      <article>
+        <span>ORT. TAMAMLANMA</span>
+        <strong>{{ ortalama_tamamlanma_saati }} saat</strong>
+        <small>Talep açılışından teknik tamamlanmaya</small>
+      </article>
+    </section>
+
+    <div class="r16-main-grid">
+      <section class="panel r16-map-panel">
+        <div class="r16-panel-head">
+          <div>
+            <span>CANLI KONUM GÖRÜNÜMÜ</span>
+            <h2>Kocaeli Arıza Haritası</h2>
+            <p>Önceki sistem haritasındaki gibi her talep ayrı konum pini olarak gösterilir.</p>
+          </div>
+          <div class="r16-legends">
+            <div>
+              <b>DURUM</b>
+              <span><i class="dot red"></i>Bekleyen</span>
+              <span><i class="dot orange"></i>İşlemde</span>
+              <span><i class="dot approval-dot"></i>Şef Onayı</span>
+              <span><i class="dot green"></i>Tamamlandı</span>
+            </div>
+            <div>
+              <b>ACİLİYET</b>
+              <span><i class="priority-key low"></i>Düşük</span>
+              <span><i class="priority-key normal"></i>Normal</span>
+              <span><i class="priority-key high"></i>Yüksek</span>
+              <span><i class="priority-key urgent"></i>Acil</span>
+            </div>
+          </div>
+        </div>
+        <div id="report-map-v16"></div>
+        {{ map_points|json_script:"r16-map-data" }}
+      </section>
+
+      <aside class="panel r16-density-panel">
+        <div class="r16-panel-head">
+          <div>
+            <span>OTOMATİK ÖLÇEKLENDİRME</span>
+            <h2>Bölgesel Yoğunluk</h2>
+            <p>Sistem talep sayısına göre bölgeleri kendisi sıralar.</p>
+          </div>
+        </div>
+
+        <section class="r16-density-group">
+          <div class="r16-density-title"><strong>İlçeler</strong><span>İlk 5</span></div>
+          {% for x in ilce_rows|slice:":5" %}
+          <div class="r16-density-row">
+            <div><strong>{{ x.ilce__ad }}</strong><small>{{ x.aktif }} aktif • {{ x.tamam }} tamamlandı</small></div>
+            <b>{{ x.adet }}</b>
+            <i><em style="width:{{ x.oran }}%"></em></i>
+          </div>
+          {% empty %}<div class="empty">Kayıt yok.</div>{% endfor %}
+        </section>
+
+        <section class="r16-density-group">
+          <div class="r16-density-title"><strong>Mahalleler</strong><span>İlk 5</span></div>
+          {% for x in mahalle_rows|slice:":5" %}
+          <div class="r16-density-row">
+            <div><strong>{{ x.mahalle__ad }}</strong><small>{{ x.ilce__ad }} • {{ x.aktif }} aktif</small></div>
+            <b>{{ x.adet }}</b>
+            <i><em style="width:{{ x.oran }}%"></em></i>
+          </div>
+          {% empty %}<div class="empty">Kayıt yok.</div>{% endfor %}
+        </section>
+
+        <section class="r16-density-group">
+          <div class="r16-density-title"><strong>Cadde / Sokaklar</strong><span>İlk 5</span></div>
+          {% for x in yol_rows|slice:":5" %}
+          <div class="r16-density-row">
+            <div><strong>{{ x.yol__ad }}</strong><small>{{ x.ilce__ad }} / {{ x.mahalle__ad }}</small></div>
+            <b>{{ x.adet }}</b>
+            <i><em style="width:{{ x.oran }}%"></em></i>
+          </div>
+          {% empty %}<div class="empty">Kayıt yok.</div>{% endfor %}
+        </section>
+      </aside>
+    </div>
+
+    <section class="panel r16-work-panel">
+      <div class="r16-panel-head">
+        <div>
+          <span>OTOMATİK İŞ LİSTESİ</span>
+          <h2>Güncel Operasyon Kayıtları</h2>
+          <p>Yeni kayıtlar ve durum değişiklikleri otomatik olarak bu listeye yansır.</p>
+        </div>
+        <div class="r16-work-meta">
+          <span><b>{{ geri_tamam }}</b> vatandaş bilgilendirildi</span>
+          <span><b>{{ acil }}</b> açık acil iş</span>
+        </div>
+      </div>
+
+      <div class="r16-work-list">
+        {% for t in is_listesi %}
+        <a class="r16-work-row" href="{% url 'dashboard:talep_detay' t.pk %}">
+          <div class="r16-work-id">
+            <strong>{{ t.talep_no }}</strong>
+            <small>{{ t.olusturulma_tarihi|date:"d.m.Y H:i" }}</small>
+          </div>
+          <div>
+            <strong>{{ t.is_alt_turu.ad }}</strong>
+            <small>{{ t.is_turu.ad }}</small>
+          </div>
+          <div>
+            <strong>{{ t.ilce.ad }} / {{ t.mahalle.ad }}</strong>
+            <small>{{ t.yol.ad }}</small>
+          </div>
+          <div class="r16-work-state">
+            <span class="badge status-{{ t.durum }}">{{ t.get_durum_display }}</span>
+            {% if t.durum == "tamamlandi" %}
+            <small>{{ t.get_vatandas_bildirim_durumu_display }}</small>
+            {% else %}
+            <small>{{ t.get_oncelik_display }} öncelik</small>
+            {% endif %}
+          </div>
+          <span class="r16-chevron">›</span>
+        </a>
+        {% empty %}
+        <div class="empty">Henüz talep bulunmuyor.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="r16-auto-note">
+      <strong>Bu rapor nasıl çalışıyor?</strong>
+      <span>185 yeni talep oluşturduğunda, koordinatör sahaya atadığında, saha durum değiştirdiğinde, şef onay verdiğinde veya 185 vatandaş geri dönüşünü kapattığında veritabanındaki güncel kayıtlar raporu otomatik yeniden hesaplar.</span>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/reports_v16.js' %}"></script>
+{% endblock %}

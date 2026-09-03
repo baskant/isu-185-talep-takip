@@ -1,0 +1,100 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{{ emri.is_emri_no }} | İş Emri{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/kurumsal_v28.css' %}"><link rel="stylesheet" href="{% static 'css/v31_all_features.css' %}"><link rel="stylesheet" href="{% static 'css/is_emri_fotograf_v42.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block body %}
+<main class="v28-workorder-page">
+  <div class="v28-workorder-actions no-print">
+    <a class="btn ghost" href="javascript:history.back()">← Geri</a>
+    <button class="btn primary" onclick="window.print()">Yazdır / PDF</button>
+  </div>
+
+  <article class="v28-workorder-sheet">
+    <header>
+      <div><span>İSU ALO 185</span><h1>SAHA İŞ EMRİ</h1></div>
+      <div class="v28-wo-number"><small>İş Emri No</small><strong>{{ emri.is_emri_no }}</strong><span>Talep: {{ talep.talep_no }}</span></div>
+    </header>
+
+    <div class="v28-wo-status">
+      <span class="badge priority-{{ talep.oncelik }}">{{ talep.get_oncelik_display }}</span>
+      <span class="badge status-{{ talep.durum }}">{{ emri.get_durum_display }}</span>
+    </div>
+
+    <section class="v28-wo-grid">
+      <div><span>Gönderen Birim</span><strong>{{ emri.gonderen_birim|default:"-" }}</strong></div>
+      <div><span>Atanan Saha</span><strong>{% if emri.atanan_saha %}{{ emri.atanan_saha.kullanici.get_full_name|default:emri.atanan_saha.kullanici.username }}{% else %}-{% endif %}</strong></div>
+      <div><span>İş Türü</span><strong>{{ talep.is_turu }}</strong></div>
+      <div><span>İş Alt Türü</span><strong>{{ talep.is_alt_turu }}</strong></div>
+      <div><span>İlçe / Mahalle</span><strong>{{ talep.ilce }} / {{ talep.mahalle }}</strong></div>
+      <div><span>Cadde / Sokak</span><strong>{{ talep.yol }}{% if talep.kapi_no %} No: {{ talep.kapi_no }}{% endif %}</strong></div>
+      <div class="span2"><span>Adres Tarifi</span><strong>{{ talep.adres_aciklama|default:"-" }}</strong></div>
+      <div><span>Vatandaş</span><strong>{{ talep.vatandas_ad }} {{ talep.vatandas_soyad }} • {{ talep.telefon }}</strong></div>
+      <div class="span2"><span>Arıza / Talep Açıklaması</span><p>{{ talep.aciklama }}</p></div>
+    </section>
+
+    <section class="v28-wo-timeline">
+      <h2>Operasyon Zamanları</h2>
+      <div><span>Atama</span><b>{{ emri.atama_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Kabul</span><b>{{ emri.kabul_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Yola Çıkış</span><b>{{ emri.yola_cikis_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Adrese Ulaşma</span><b>{{ emri.adrese_ulasma_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Müdahale</span><b>{{ emri.mudahale_baslama_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Saha Bitiş</span><b>{{ emri.saha_tamam_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+      <div><span>Şef Onayı</span><b>{{ emri.sef_onay_tarihi|date:"d.m.Y H:i"|default:"-" }}</b></div>
+    </section>
+
+    <section class="v28-wo-result">
+      <span>Saha Sonuç Notu</span>
+      <p>{{ emri.sonuc_notu|default:"Henüz sonuç notu girilmedi." }}</p>
+    </section>
+
+    <section class="v31-evidence v42-workorder-evidence">
+      <div class="v31-evidence-head"><span>İŞ EMRİ GÖRSELLERİ</span><h2>Zorunlu Fotoğraflar & GPS</h2></div>
+      <div class="v42-workorder-summary"><strong>{{ foto_yuklenen }} / {{ foto_zorunlu }} zorunlu görsel tamamlandı</strong><span>{{ talep.is_alt_turu.ad }}</span></div>
+      <div class="v42-detail-photo-grid">
+        {% for slot in foto_slotlari %}
+        <div class="v31-photo-card v42-detail-photo-card {% if slot.tamam %}done{% endif %}">
+          <span>{{ slot.sira }}. {{ slot.etiket }}</span>
+          {% if slot.fotograf %}
+            <a href="{{ slot.fotograf.foto.url }}" target="_blank"><img src="{{ slot.fotograf.foto.url }}" alt="{{ slot.etiket }}"></a>
+            <small>{{ slot.fotograf.yuklenme_tarihi|date:"d.m.Y H:i" }}</small>
+          {% else %}
+            <div class="v31-photo-empty">Zorunlu fotoğraf bekleniyor</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div class="v31-gps-card">
+          <span>GPS Durumu</span>
+          <strong>{% if emri.gps_dogrulandi %}Doğrulandı{% elif emri.gps_dogrulama_tarihi %}Koordinat Kaydedildi{% else %}Henüz Yok{% endif %}</strong>
+          {% if emri.gps_mesafe_m != None %}<b>{{ emri.gps_mesafe_m }} metre</b>{% endif %}
+        </div>
+      </div>
+    </section>
+
+
+    {% if talep.lat and talep.lng %}
+    <section class="v34-workorder-map" data-target-lat="{{ talep.lat }}" data-target-lng="{{ talep.lng }}">
+      <div class="v31-evidence-head"><span>KONUM</span><h2>İş Emri Haritası</h2></div>
+      <div id="v34-workorder-map-canvas"></div>
+      <div class="v34-map-legend"><span><i class="target"></i> Arıza noktası</span></div>
+    </section>
+    {% endif %}
+
+    <section class="v31-timeline">
+      <div class="v31-evidence-head"><span>İŞ EMRİ GEÇMİŞİ</span><h2>Zaman Çizelgesi</h2></div>
+      <div class="v31-timeline-list">
+        {% for x in zaman_cizelgesi %}
+        <div class="v31-timeline-row {{ x.tur }}">
+          <time>{{ x.tarih|date:"d.m.Y H:i:s" }}</time>
+          <i></i>
+          <div><strong>{{ x.baslik }}</strong>{% if x.aciklama %}<p>{{ x.aciklama }}</p>{% endif %}</div>
+        </div>
+        {% empty %}<p>Henüz zaman çizelgesi kaydı yok.</p>{% endfor %}
+      </div>
+    </section>
+
+    <footer><span>Oluşturan: {{ emri.olusturan.get_full_name|default:emri.olusturan.username }}</span><span>Oluşturma: {{ emri.olusturulma_tarihi|date:"d.m.Y H:i" }}</span></footer>
+  </article>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/workorder_map_v35.js' %}"></script>
+{% endblock %}

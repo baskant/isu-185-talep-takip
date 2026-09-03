@@ -1,0 +1,23 @@
+<aside class="sidebar">
+<div class="side-title">YÖNETİM</div>
+<a class="{% if request.path == '/sistem/' %}active{% endif %}" href="{% url 'dashboard:sistem' %}"><span>▦</span>Dashboard</a>
+<a class="{% if '/operasyon-merkezi/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_operasyon_merkezi' %}"><span>⌖</span>Operasyon Merkezi</a>
+<a class="{% if '/sistem/talepler/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_talepler' %}"><span>▤</span>Talepler</a>
+<a class="{% if '/sistem/is-emirleri/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_is_emirleri' %}"><span>▣</span>İş Emirleri</a>
+<a class="{% if '/abonelik/' in request.path %}active{% endif %}" href="{% url 'abonelik:izleme' %}"><span>▦</span>Abone Yönetimi</a>
+<a class="{% if '/abonelik/ambar/' in request.path %}active{% endif %}" href="{% url 'abonelik:ambar_yonetimi' %}"><span>▣</span>Ambar Yönetimi</a>
+<div class="side-title">ORGANİZASYON</div>
+<a class="{% if '/kullanicilar/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_kullanicilar' %}"><span>♙</span>Kullanıcılar</a>
+<a class="{% if '/personel-saha/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_personel_saha' %}"><span>▦</span>Personel & Saha</a>
+<a class="{% if '/roller/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_roller' %}"><span>♧</span>Roller & Yetki Ağacı</a>
+<a class="{% if '/yetki-kurallari/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_kurallar' %}"><span>⇄</span>Atama Kuralları</a>
+<div class="side-title">TANIMLAR</div>
+<a class="{% if '/is-turleri/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_is_turleri' %}"><span>◫</span>İş Türleri</a>
+<a class="{% if '/adresler/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_adresler' %}"><span>⌖</span>Adres Yönetimi</a>
+<div class="side-title">KAYIT & ANALİZ</div>
+<a class="{% if '/memnuniyet/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_memnuniyet' %}"><span>★</span>Memnuniyet Analizi</a>
+<a class="{% if '/hareket-akisi/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_geri_bildirimler' %}"><span>◌</span>Hareket Akışı</a>
+<a class="{% if '/loglar/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_loglar' %}"><span>≣</span>Loglar</a>
+<a class="{% if '/raporlar/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_raporlar' %}"><span>⌁</span>Raporlar</a>
+<a class="{% if '/rapor-merkezi/' in request.path %}active{% endif %}" href="{% url 'dashboard:sistem_rapor_merkezi' %}"><span>⇩</span>Rapor Merkezi</a>
+</aside>

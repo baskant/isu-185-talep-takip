@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Atama Kuralları | İSU 185{% endblock %}
+{% block body %}<div class="system-layout">{% include "system/_sidebar.html" %}<main class="system-main">
+<div class="page-heading"><div><span class="eyebrow">DATA-DRIVEN YETKİ</span><h1>Atama Kuralları</h1><p>Hangi rolün hangi role iş atayacağı kod değiştirmeden yönetilir.</p></div></div>
+<div class="two-col"><section class="panel"><div class="rule-list">{% for k in kurallar %}<div class="rule-card"><span>{{ k.kaynak_rol.ad }}</span><b>→</b><span>{{ k.hedef_rol.ad }}</span><em>{% if k.aktif %}Aktif{% else %}Pasif{% endif %}</em></div>{% empty %}<div class="empty">Kural yok.</div>{% endfor %}</div></section>
+<section class="panel"><h2>Yeni Kural</h2><form method="post" class="form-grid">{% csrf_token %}{{ form.as_p }}<button class="btn primary">Kuralı Kaydet</button></form></section></div></main></div>{% endblock %}

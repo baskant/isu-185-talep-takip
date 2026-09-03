@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Adres Yönetimi | İSU 185{% endblock %}
+{% block body %}<div class="system-layout">{% include "system/_sidebar.html" %}<main class="system-main">
+<div class="page-heading"><div><span class="eyebrow">KOCAELİ ADRES HİYERARŞİSİ</span><h1>Adres Yönetimi</h1><p>İlçe → Mahalle → Yol bağı yanlış bölge eşleşmesini engeller.</p></div></div>
+<div class="stats-grid three"><div class="stat-card"><span>İlçe</span><strong>{{ ilceler|length }}</strong></div><div class="stat-card"><span>Mahalle</span><strong>{{ mahalle_sayisi }}</strong></div><div class="stat-card"><span>Cadde / Sokak</span><strong>{{ yol_sayisi }}</strong></div></div>
+<div class="two-col"><section class="panel"><h2>İlçeler</h2><div class="district-grid">{% for i in ilceler %}<div class="district-card"><strong>{{ i.ad }}</strong><span>{{ i.mahalle_sayisi }} mahalle</span></div>{% endfor %}</div></section>
+<section class="panel"><h2>Adres CSV İçe Aktar</h2><form method="post" enctype="multipart/form-data" action="{% url 'dashboard:adres_csv_import' %}" class="upload-box">{% csrf_token %}{{ csv_form.as_p }}<div class="csv-hint"><strong>Başlık:</strong><code>ilce,mahalle,yol,tur,lat,lng</code></div><button class="btn primary">CSV'yi İçe Aktar</button></form></section></div></main></div>{% endblock %}

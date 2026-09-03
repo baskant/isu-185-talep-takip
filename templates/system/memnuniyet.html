@@ -1,0 +1,80 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Memnuniyet Analizi | İSU 185{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/memnuniyet_v20.css' %}">{% endblock %}
+{% block body %}
+<div class="system-layout">
+  {% include "system/_sidebar.html" %}
+  <main class="system-main satisfaction-page">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">VATANDAŞ DENEYİMİ</span>
+        <h1>Memnuniyet Analizi</h1>
+        <p>185 personelinin görüşme sonrasında kaydettiği memnuniyet ve opsiyonel anket sonuçları.</p>
+      </div>
+    </div>
+
+    <section class="satisfaction-stats">
+      <div class="satisfaction-stat"><span>Tamamlanan Görüşme</span><strong>{{ toplam }}</strong><small>Vatandaşla görüşülen kayıt</small></div>
+      <div class="satisfaction-stat"><span>Ankete Katılan</span><strong>{{ anket_sayisi }}</strong><small>%{{ anket_katilim }} katılım</small></div>
+      <div class="satisfaction-stat score"><span>Ortalama Hizmet Puanı</span><strong>{% if ortalama_puan != None %}{{ ortalama_puan }}<em>/5</em>{% else %}-{% endif %}</strong><small>Puan veren vatandaşlar</small></div>
+      <div class="satisfaction-stat positive"><span>Olumlu Memnuniyet</span><strong>%{{ memnuniyet_orani }}</strong><small>“İyi” değerlendirmelerin oranı</small></div>
+      <div class="satisfaction-stat attention"><span>Dikkat Gerektiren</span><strong>{{ dikkat_sayisi }}</strong><small>Düşük/olumsuz değerlendirme</small></div>
+    </section>
+
+    <section class="panel satisfaction-filter-panel">
+      <form method="get" class="satisfaction-filter">
+        <label><span>Ara</span><input name="ara" value="{{ ara }}" placeholder="Talep no, vatandaş veya 185 personeli"></label>
+        <label><span>İlçe</span><select name="ilce"><option value="">Tüm ilçeler</option>{% for i in ilceler %}<option value="{{ i.pk }}" {% if secili_ilce == i.pk|stringformat:'s' %}selected{% endif %}>{{ i.ad }}</option>{% endfor %}</select></label>
+        <button class="btn primary" type="submit">Filtrele</button>
+        {% if ara or secili_ilce %}<a class="btn ghost" href="{% url 'dashboard:sistem_memnuniyet' %}">Temizle</a>{% endif %}
+      </form>
+    </section>
+
+    <section class="panel satisfaction-table-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Vatandaş Değerlendirmeleri</h2>
+          <p>Görüşme sonucu, memnuniyet ve anket cevapları talep kaydıyla birlikte listelenir.</p>
+        </div>
+        <span class="record-count">{{ toplam }} kayıt</span>
+      </div>
+      <div class="table-wrap satisfaction-table-wrap">
+        <table class="data-table satisfaction-table">
+          <thead>
+            <tr>
+              <th>Talep / Vatandaş</th><th>İlçe</th><th>Genel Memnuniyet</th><th>Çözüldü mü?</th>
+              <th>Hız</th><th>Bilgilendirme</th><th>Puan</th>
+              <th>İşlem Süresi</th><th>185 Personeli / Tarih</th><th>Not</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for x in satirlar %}
+            <tr class="{% if x.dikkat %}needs-attention{% endif %}">
+              <td>
+                <a class="ticket-link" href="{% url 'dashboard:talep_detay' x.kayit.talep.pk %}">{{ x.kayit.talep.talep_no }}</a>
+                <small>{{ x.kayit.talep.vatandas_ad }} {{ x.kayit.talep.vatandas_soyad }}</small>
+              </td>
+              <td>{{ x.kayit.talep.ilce.ad }}</td>
+              <td>{% if x.memnuniyet %}<span class="answer-pill answer-{{ x.memnuniyet|lower }}">{{ x.memnuniyet }}</span>{% else %}-{% endif %}</td>
+              <td>{% if x.sorun_cozuldu %}{{ x.sorun_cozuldu }}{% else %}<span class="survey-empty">Anket yok</span>{% endif %}</td>
+              <td>{{ x.hizmet_hizi|default:"-" }}</td>
+              <td>{{ x.bilgilendirme|default:"-" }}</td>
+              <td>{% if x.genel_puan %}<strong class="score-pill">{{ x.genel_puan }}</strong>{% else %}-{% endif %}</td>
+              <td>{{ x.islem_suresi|default:"-" }}</td>
+              <td>{% if x.kayit.kullanici %}<strong>@{{ x.kayit.kullanici.username }}</strong>{% else %}Sistem{% endif %}<small>{{ x.kayit.tarih|date:"d.m.Y H:i" }}</small></td>
+              <td>{% if x.gorusme_notu %}<span class="note-cell" title="{{ x.gorusme_notu }}">{{ x.gorusme_notu|truncatechars:58 }}</span>{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10"><div class="empty">Henüz görüntülenecek vatandaş değerlendirmesi yok.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="satisfaction-legend">
+        <span><i class="legend-dot attention"></i>Dikkat gerektiren satır: kötü memnuniyet, çözülmeyen talep, yavaş hizmet, yetersiz bilgilendirme, veya 1–2 puan.</span>
+        <span>Opsiyonel anket boş bırakıldıysa “Anket yok” olarak gösterilir.</span>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

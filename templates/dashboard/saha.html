@@ -1,0 +1,220 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{% if abone_web %}Abonelik ve Sayaç İşlemleri | İSU 185{% else %}Saha Operasyon | İSU 185{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/kurumsal_v28.css' %}"><link rel="stylesheet" href="{% static 'css/is_emri_fotograf_v42.css' %}">{% endblock %}
+{% block body %}
+<main class="workspace-page field-operations-page">
+  <div class="page-heading field-page-heading">
+    <div>
+      {% if abone_web %}
+      <span class="eyebrow">ABONELİK / SAYAÇ İŞLEMLERİ</span>
+      <h1>Abonelik İşleri</h1>
+      <p>Atanan abonelik ve sayaç işlerini masaüstü ekranından takip edin ve işlem adımlarını kaydedin.</p>
+      {% else %}
+      <span class="eyebrow">SAHA OPERASYON MERKEZİ</span>
+      <h1>Saha Görevleri</h1>
+      <p>Atanan iş emirlerini sırayla ilerletin. Her işlem tüm sistemlerde otomatik hareket kaydı ve log oluşturur.</p>
+      {% endif %}
+{% if profil.rol.calisma_kanali == "her_ikisi" %}
+      <a class="btn small" href="{% url 'dashboard:mobil_saha' %}">Mobil Saha Görünümü →</a>
+      {% endif %}
+      {% if profil %}
+      <div class="scope-tags">
+        <span class="scope-label">Rol</span>
+        <span class="mini-tag strong">{{ profil.rol.ad }}</span>
+        <span class="scope-label">Kanal</span>
+        <span class="mini-tag strong">{% if abone_web %}Web / PC{% else %}{{ profil.rol.get_calisma_kanali_display }}{% endif %}</span>
+        <span class="scope-label">Bölge</span>
+        {% for x in profil.yetkili_ilceler.all %}<span class="mini-tag">{{ x.ad }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if profil %}
+    <form method="post" action="{% url 'dashboard:musaitlik' %}">
+      {% csrf_token %}
+      <button class="availability {% if profil.musait %}available{% else %}busy{% endif %}" type="submit">
+        <i></i>
+        {% if profil.musait %}Yeni Görev Açık{% else %}Yeni Görev Kapalı{% endif %} • Değiştir
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="stats-grid three field-stats">
+    <div class="stat-card warn"><span>Aktif Görev</span><strong>{{ aktif }}</strong><small>Üzerinizdeki açık işler</small></div>
+    <div class="stat-card urgent"><span>Acil</span><strong>{{ acil }}</strong><small>Öncelikli müdahale</small></div>
+    <div class="stat-card success"><span>Tamamlanan</span><strong>{{ tamam }}</strong><small>Kapatılan görevler</small></div>
+  </div>
+
+  <section class="field-operation-list">
+    {% for t in talepler %}
+    <article class="field-operation-card {% if t.oncelik == 'acil' %}urgent-card{% endif %}" data-ticket="{{ t.pk }}">
+      <div class="field-op-head">
+        <div>
+          {% if t.is_emri %}<a class="v28-workorder-no" href="{% url 'dashboard:is_emri_detay' t.is_emri.pk %}">{{ t.is_emri.is_emri_no }}</a>{% endif %}
+          <span class="ticket-no">Talep: {{ t.talep_no }}</span>
+          <h2>{{ t.is_turu }} → {{ t.is_alt_turu }}</h2>
+          <div class="field-op-meta">
+            <span>{{ t.ilce }} / {{ t.mahalle.ad }}</span>
+            <span>{{ t.yol.ad }}{% if t.kapi_no %} No: {{ t.kapi_no }}{% endif %}</span>
+          </div>
+        </div>
+        <div class="field-op-badges">
+          <span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span>
+          <span class="badge status-{{ t.durum }}">{{ t.get_durum_display }}</span>
+        </div>
+      </div>
+
+      <div class="field-progress approval-flow">
+        <div class="progress-step {% if t.durum != 'sahaya_atandi' %}done{% else %}current{% endif %}">
+          <i>1</i><span>{% if abone_web %}İşi Al{% else %}Kabul{% endif %}</span>
+        </div>
+        <div class="progress-line {% if t.durum == 'yolda' or t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}"></div>
+        <div class="progress-step {% if t.durum == 'kabul_edildi' %}current{% elif t.durum == 'yolda' or t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">
+          <i>2</i><span>{% if abone_web %}İncele{% else %}Yola Çıkış{% endif %}</span>
+        </div>
+        <div class="progress-line {% if t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}"></div>
+        <div class="progress-step {% if t.durum == 'yolda' %}current{% elif t.durum == 'yerinde' or t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">
+          <i>3</i><span>{% if abone_web %}Kontrol{% else %}Yerinde{% endif %}</span>
+        </div>
+        <div class="progress-line {% if t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}"></div>
+        <div class="progress-step {% if t.durum == 'yerinde' %}current{% elif t.durum == 'islemde' or t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">
+          <i>4</i><span>{% if abone_web %}İşlem{% else %}Müdahale{% endif %}</span>
+        </div>
+        <div class="progress-line {% if t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}"></div>
+        <div class="progress-step {% if t.durum == 'islemde' %}current{% elif t.durum == 'onay_bekliyor' or t.durum == 'tamamlandi' %}done{% endif %}">
+          <i>5</i><span>{% if abone_web %}Onaya Gönder{% else %}Şefe Gönder{% endif %}</span>
+        </div>
+        <div class="progress-line {% if t.durum == 'tamamlandi' %}done{% endif %}"></div>
+        <div class="progress-step {% if t.durum == 'onay_bekliyor' %}current{% elif t.durum == 'tamamlandi' %}done{% endif %}">
+          <i>6</i><span>Şef Onayı</span>
+        </div>
+      </div>
+
+      <div class="field-op-body">
+        <div class="field-problem">
+          <span class="field-label">Arıza Açıklaması</span>
+          <p>{{ t.aciklama }}</p>
+          {% if t.adres_aciklama %}
+          <span class="field-label">Adres Notu</span>
+          <p>{{ t.adres_aciklama }}</p>
+          {% endif %}
+          <a class="detail-link" href="{% url 'dashboard:talep_detay' t.pk %}">Talep detayı ve otomatik hareket akışı →</a>
+        </div>
+
+        <div class="field-next-action">
+          <span class="field-label">Sıradaki İşlem</span>
+
+          {% if t.durum == "sahaya_atandi" %}
+            <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'kabul_edildi' %}">
+              {% csrf_token %}
+              <button class="btn primary field-action-main">{% if abone_web %}✓ İşi Üstlen{% else %}✓ Talebi Kabul Et{% endif %}</button>
+            </form>
+            <small>{% if abone_web %}Abonelik işinin tarafınızdan işleme alındığını kaydeder.{% else %}Görevi üstlendiğinizi koordinatöre ve 185'e bildirir.{% endif %}</small>
+          {% elif t.durum == "kabul_edildi" %}
+            <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'yolda' %}">
+              {% csrf_token %}
+              <button class="btn primary field-action-main">{% if abone_web %}➜ İncelemeye Başla{% else %}➜ Yola Çıktık{% endif %}</button>
+            </form>
+            <small>{% if abone_web %}Abonelik/sayaç kaydı inceleme aşamasına alınır.{% else %}Ekip arıza noktasına hareket etti olarak kaydedilir.{% endif %}</small>
+          {% elif t.durum == "yolda" %}
+            <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'yerinde' %}">
+              {% csrf_token %}
+              <button class="btn primary field-action-main">{% if abone_web %}✓ Kontrol Tamamlandı{% else %}⌖ Adrese Ulaştık{% endif %}</button>
+            </form>
+            <small>{% if abone_web %}Gerekli kayıt ve evrak kontrolünün tamamlandığını kaydeder.{% else %}Yerinde inceleme aşaması başlatılır.{% endif %}</small>
+          {% elif t.durum == "yerinde" %}
+            <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'islemde' %}">
+              {% csrf_token %}
+              <button class="btn primary field-action-main">{% if abone_web %}⚙ İşlemi Uygula{% else %}⚙ Müdahaleye Başla{% endif %}</button>
+            </form>
+            <small>{% if abone_web %}Abonelik/sayaç işleminin uygulanmaya başladığını kaydeder.{% else %}Arıza üzerinde aktif çalışma başladığı kaydedilir.{% endif %}</small>
+          {% elif t.durum == "islemde" %}
+            <form method="post" action="{% url 'dashboard:durum_guncelle' t.pk 'onay_bekliyor' %}"
+                  class="field-completion-form"
+                  onsubmit="return confirm('İşi tamamladığınızı şef onayına göndermek istiyor musunuz?')">
+              {% csrf_token %}
+              <label class="completion-note-label">
+                <span>Şefe Sonuç Notu <b>*</b></span>
+                <textarea name="sonuc_notu" rows="4" maxlength="1000" required
+                  placeholder="Örn. Arızanın vana bağlantısındaki contadan kaynaklandığı tespit edildi. Conta değiştirildi, bağlantı sıkıldı ve kaçak kontrolü yapıldı."></textarea>
+              </label>
+              <button class="btn primary field-action-main">✓ İşi Bitirdim • Şef Onayına Gönder</button>
+            </form>
+            <small>Bu işlem talebi kapatmaz. Şef kontrol edip onayladığında tüm ekranlarda Tamamlandı görünür.</small>
+          {% elif t.durum == "onay_bekliyor" %}
+            <div class="field-awaiting-approval">
+              <strong>Şef Onayı Bekleniyor</strong>
+              <p>İşi tamamladığınız bilgisi ve sonuç notunuz şefe iletildi.</p>
+              <span class="field-label">Gönderilen Sonuç Notu</span>
+              <blockquote>{{ t.saha_sonuc_notu }}</blockquote>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if t.is_emri %}{% if t.durum == "yerinde" or t.durum == "islemde" %}
+      <section class="v42-photo-section v42-photo-web">
+        <div class="v42-photo-head">
+          <div><span>ZORUNLU İŞ EMRİ GÖRSELLERİ</span><strong>{{ t.foto_yuklenen }} / {{ t.foto_zorunlu }} tamamlandı</strong></div>
+          <b>{{ t.is_alt_turu.ad }}</b>
+        </div>
+        <div class="v42-photo-slots">
+          {% for slot in t.foto_slotlari %}
+          <div class="v42-photo-slot {% if slot.tamam %}done{% endif %}">
+            <div class="v42-photo-title"><i>{{ slot.sira }}</i><strong>{{ slot.etiket }}</strong>{% if slot.tamam %}<span>✓ Yüklendi</span>{% else %}<span>Zorunlu</span>{% endif %}</div>
+            {% if slot.fotograf %}<a class="v42-photo-preview" href="{{ slot.fotograf.foto.url }}" target="_blank"><img src="{{ slot.fotograf.foto.url }}" alt="{{ slot.etiket }}"></a>{% endif %}
+            <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:is_emri_fotograf_yukle' t.is_emri.pk %}" class="v42-photo-upload">
+              {% csrf_token %}<input type="hidden" name="sira" value="{{ slot.sira }}">
+              <input type="file" name="foto" accept="image/*" required>
+              <button type="submit">{% if slot.tamam %}Fotoğrafı Değiştir{% else %}Fotoğraf Ekle{% endif %}</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="v42-photo-note">Bu iş alt türü için tanımlı tüm zorunlu görseller tamamlanmadan iş şef onayına gönderilemez.</p>
+      </section>
+      {% endif %}{% endif %}
+
+      <details class="field-note-box">
+        <summary>＋ Saha Açıklaması Ekle</summary>
+        <form method="post" action="{% url 'dashboard:saha_notu' t.pk %}">
+          {% csrf_token %}
+          <label>
+            Operasyon Notu
+            <textarea name="not" rows="3" maxlength="700"
+              placeholder="Örn. Kazı için ekipman bekleniyor, vatandaş bilgilendirildi, vana kapatıldı..."></textarea>
+          </label>
+          <div class="field-note-footer">
+            <small>Bu alan manuel “geri bildirim” değildir. Kaydettiğiniz saha notunu sistem otomatik hareket akışına ve loga işler.</small>
+            <button class="btn small">Saha Notunu Kaydet</button>
+          </div>
+        </form>
+      </details>
+    </article>
+    {% empty %}
+      <section class="panel empty-state">
+        <strong>Şu anda atanmış açık saha göreviniz bulunmuyor.</strong>
+        <p>Yeni atama yapıldığında burada görüntülenecek.</p>
+      </section>
+    {% endfor %}
+  </section>
+
+  {% if tamamlananlar %}
+  <section class="panel completed-field-panel">
+    <div class="panel-head">
+      <div><h2>Son Tamamlanan Görevler</h2><p>Bu saha hesabının kapattığı son işler</p></div>
+    </div>
+    <div class="completed-field-grid">
+      {% for t in tamamlananlar %}
+      <a href="{% url 'dashboard:talep_detay' t.pk %}" class="completed-field-item">
+        <div><strong>{{ t.talep_no }}</strong><span>{{ t.ilce }} • {{ t.is_turu }}</span></div>
+        <span>{{ t.tamamlanma_tarihi|date:"d.m H:i" }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/saha_dashboard.js' %}"></script>{% endblock %}

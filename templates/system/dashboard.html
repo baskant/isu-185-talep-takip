@@ -1,0 +1,181 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Sistem Yönetimi | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/sla_v27.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block body %}
+<div class="system-layout">
+{% include "system/_sidebar.html" %}
+<main class="system-main">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">OPERASYON MERKEZİ</span>
+      <h1>Sistem Yönetim Paneli</h1>
+      <p>Kocaeli genelindeki 185 arıza operasyonunun anlık özeti.</p>
+    </div>
+    <a class="btn" href="{% url 'dashboard:sistem_personel_saha' %}">Personel & Saha Rehberi →</a>
+  </div>
+
+  <div class="stats-grid six">
+    <div class="stat-card"><span>Toplam Talep</span><strong>{{ toplam }}</strong><small>Tüm kayıtlar</small></div>
+    <div class="stat-card danger"><span>Yeni / Bekleyen</span><strong>{{ yeni }}</strong><small>Atama bekliyor</small></div>
+    <div class="stat-card warn"><span>Sahada</span><strong>{{ sahada }}</strong><small>Aktif müdahale</small></div>
+    <div class="stat-card approval"><span>Şef Onayı</span><strong>{{ onay }}</strong><small>Saha bitirdi • kontrol bekliyor</small></div>
+    <div class="stat-card success"><span>Tamamlandı</span><strong>{{ tamam }}</strong><small>{{ geri_bildirim_bekleyen }} vatandaş dönüşü bekliyor</small></div>
+    <div class="stat-card urgent"><span>Acil</span><strong>{{ acil }}</strong><small>Açık acil</small></div>
+  </div>
+
+  <section class="panel sla27-admin-panel">
+    <div class="panel-head">
+      <div>
+        <span class="eyebrow">SLA / GECİKEN TALEPLER</span>
+        <h2>Sahaya Atama Süre Takibi</h2>
+        <p>Acil 30 dk • Yüksek 60 dk • Normal 2 saat • Düşük 4 saat. Süre, talebin şef/koordinatör kuyruğuna düştüğü anda başlar.</p>
+      </div>
+      <div class="sla27-admin-counts">
+        <span class="danger"><b>{{ sla_geciken_sayisi }}</b> aşıldı</span>
+        <span class="warn"><b>{{ sla_yaklasan_sayisi }}</b> yaklaşıyor</span>
+      </div>
+    </div>
+
+    <div class="sla27-admin-list">
+      {% for t in sla_geciken %}
+      <a href="{% url 'dashboard:talep_detay' t.pk %}" class="sla27-admin-row danger">
+        <div>
+          <strong>{{ t.talep_no }}</strong>
+          <span>{{ t.ilce }} • {{ t.is_turu }} → {{ t.is_alt_turu }}</span>
+        </div>
+        <span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span>
+        <span class="sla27-time danger">SLA AŞILDI</span>
+        <small>Hedef {{ t.sla.hedef_label }} • Son {{ t.sla.son_tarih|date:"H:i" }}</small>
+      </a>
+      {% endfor %}
+
+      {% for t in sla_yaklasan %}
+      <a href="{% url 'dashboard:talep_detay' t.pk %}" class="sla27-admin-row warn">
+        <div>
+          <strong>{{ t.talep_no }}</strong>
+          <span>{{ t.ilce }} • {{ t.is_turu }} → {{ t.is_alt_turu }}</span>
+        </div>
+        <span class="badge priority-{{ t.oncelik }}">{{ t.get_oncelik_display }}</span>
+        <span class="sla27-time warn">{{ t.sla.kalan_dakika }} dk kaldı</span>
+        <small>Hedef {{ t.sla.hedef_label }} • Son {{ t.sla.son_tarih|date:"H:i" }}</small>
+      </a>
+      {% endfor %}
+
+      {% if not sla_geciken and not sla_yaklasan %}
+      <div class="sla27-empty">Şu anda SLA aşan veya süresi yaklaşan saha ataması yok.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    <section class="panel">
+      <div class="panel-head map-panel-head">
+        <div>
+          <h2>Kocaeli Arıza Haritası</h2>
+          <p>Her talep mağaza/şube haritasındaki gibi ayrı bir konum pini olarak gösterilir.</p>
+        </div>
+        <div class="map-legends">
+          <div class="legend">
+            <strong>Durum</strong>
+            <span><i class="dot red"></i>Bekleyen</span>
+            <span><i class="dot orange"></i>İşlemde</span>
+            <span><i class="dot approval-dot"></i>Şef Onayı</span>
+            <span><i class="dot green"></i>Tamamlandı</span>
+          </div>
+          <div class="legend priority-legend">
+            <strong>Aciliyet</strong>
+            <span><i class="priority-key low"></i>Düşük</span>
+            <span><i class="priority-key normal"></i>Normal</span>
+            <span><i class="priority-key high"></i>Yüksek</span>
+            <span><i class="priority-key urgent"></i>Acil</span>
+          </div>
+        </div>
+      </div>
+      <div id="system-map" class="map big"></div>
+      {{ map_points|json_script:"map-data" }}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2>Son Talepler</h2><p>En yeni 10 kayıt</p></div>
+        <a class="link" href="{% url 'dashboard:sistem_talepler' %}">Tümünü gör</a>
+      </div>
+      <div class="recent-list">
+        {% for t in son_talepler %}
+          <a href="{% url 'dashboard:talep_detay' t.pk %}" class="recent-item">
+            <div><strong>{{ t.talep_no }}</strong><span>{{ t.ilce }} • {{ t.is_turu }}</span></div>
+            <span class="badge status-{{ t.durum }}">{{ t.get_durum_display }}</span>
+          </a>
+        {% empty %}
+          <div class="empty">Henüz talep yok.</div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+
+  <section class="panel da-dashboard-module">
+    <div class="panel-head"><div><span class="eyebrow">ABONELİK & AMBAR</span><h2>Abone ve Sayaç Yönetimi</h2><p>Vatandaş sicili, sözleşme, sayaç ve ambar süreçlerinin güncel özeti.</p></div></div>
+    <div class="module-body">
+      <div class="module-kpi"><span>Aktif Sicil</span><strong>{{ abonelik_ozet.aktif_sicil }}</strong></div>
+      <div class="module-kpi"><span>Aktif Sözleşme</span><strong>{{ abonelik_ozet.aktif_sozlesme }}</strong></div>
+      <div class="module-kpi"><span>Takılı Sayaç</span><strong>{{ abonelik_ozet.takili_sayac }}</strong></div>
+      <div class="module-kpi"><span>Merkez Stok</span><strong>{{ abonelik_ozet.merkez_stok }}</strong></div>
+      <div class="module-kpi"><span>Açık Ambar Talebi</span><strong>{{ abonelik_ozet.acik_ambar_talebi }}</strong></div>
+      <div class="module-kpi"><span>Hurda Sayaç</span><strong>{{ abonelik_ozet.hurda }}</strong></div>
+    </div>
+    <div class="module-link"><a href="{% url 'abonelik:izleme' %}">Abone yönetimini aç →</a> · <a href="{% url 'abonelik:ambar_yonetimi' %}">Ambar yönetimini aç →</a></div>
+  </section>
+
+  <section class="panel system-org-overview">
+    <div class="panel-head">
+      <div>
+        <span class="eyebrow">KURUMSAL ORGANİZASYON</span>
+        <h2>İlçe Şefleri / Koordinatörler ve Saha Durumu</h2>
+        <p>12 ilçenin yönetici ve saha kapasitesi tek gridde görünür.</p>
+      </div>
+      <a class="link" href="{% url 'dashboard:sistem_personel_saha' %}">Tüm kullanıcı ve saha bilgilerini aç →</a>
+    </div>
+
+    <div class="district-org-grid">
+      {% for x in organizasyon_ozeti %}
+      <a class="district-org-card" href="{% url 'dashboard:sistem_personel_saha' %}#ilce-{{ x.ilce.kod }}">
+        <div class="district-org-head">
+          <strong>{{ x.ilce.ad }}</strong>
+          {% if x.aktif_operasyon %}<span class="live-count">{{ x.aktif_operasyon }} aktif</span>{% else %}<span class="quiet-count">Operasyon yok</span>{% endif %}
+        </div>
+        <div class="district-chief">
+          <span>Şef / Koordinatör</span>
+          {% for p in x.sefler %}
+            <b>{{ p.kullanici.get_full_name|default:p.kullanici.username }}</b>
+            <small>@{{ p.kullanici.username }} • {{ p.rol.ad }}</small>
+          {% empty %}
+            <b class="missing-text">Atanmamış</b>
+          {% endfor %}
+        </div>
+        <div class="district-org-stats">
+          <span><b>{{ x.saha_sayisi }}</b> saha</span>
+          <span><b>{{ x.musait_saha }}</b> müsait</span>
+          <span><b>{{ x.sef_sayisi }}</b> yönetici</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="chart-grid">
+    <section class="panel"><h2>İlçe Bazlı Yoğunluk</h2><div class="chart-box"><canvas id="districtChart"></canvas></div></section>
+    <section class="panel"><h2>İş Türü Dağılımı</h2><div class="chart-box"><canvas id="typeChart"></canvas></div></section>
+  </div>
+
+  {{ ilce_json|json_script:"ilce-data" }}
+  {{ tur_json|json_script:"tur-data" }}
+</main>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/system_dashboard.js' %}"></script>{% endblock %}

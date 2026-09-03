@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Rapor Merkezi | İSU 185{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/report_center_v33.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="system-layout">
+  {% include "system/_sidebar.html" %}
+
+  <main class="system-main rc33">
+    <header class="rc33-brand">
+      <div class="rc33-brand-left">
+        <img src="{% static 'img/isu_report_logo.png' %}" alt="İSU">
+        <div>
+          <span>KOCAELİ SU VE KANALİZASYON İDARESİ GENEL MÜDÜRLÜĞÜ</span>
+          <h1>İSU 185 Talep Takip — Rapor Merkezi</h1>
+          <p>Veriler sistemdeki gerçek talep, iş emri, şef, saha, SLA ve geri dönüş kayıtlarından otomatik oluşturulur.</p>
+        </div>
+      </div>
+      <div class="rc33-period-box">
+        <small>SEÇİLİ DÖNEM</small>
+        <strong>{{ baslangic }} → {{ bitis }}</strong>
+        <span>{{ toplam }} talep • {{ icmal.toplam_is_emri }} iş emri</span>
+      </div>
+    </header>
+
+    <section class="rc33-filterbar">
+      <form method="get" id="rc33-filter-form">
+        <div class="rc33-quick">
+          <button type="button" data-rc33-preset="today">Bugün</button>
+          <button type="button" data-rc33-preset="7days">Son 7 Gün</button>
+          <button type="button" data-rc33-preset="month">Bu Ay</button>
+        </div>
+        <label>
+          <span>Başlangıç</span>
+          <input type="date" name="baslangic" value="{{ baslangic }}" id="rc33-start">
+        </label>
+        <label>
+          <span>Bitiş</span>
+          <input type="date" name="bitis" value="{{ bitis }}" id="rc33-end">
+        </label>
+        <button class="rc33-apply" type="submit">Dönemi Uygula</button>
+      </form>
+    </section>
+
+    <section class="da-panel" style="margin-top:16px">
+      <div class="da-panel-head"><div><span>ABONELİK & AMBAR İCMALİ</span><h2>Abone ve Sayaç İşlemleri</h2><p>Seçili dönemde oluşturulan sicil, sözleşme ve ambar hareketlerinin özeti.</p></div></div>
+      <div class="da-report-strip">
+        <div><span>Yeni Sicil</span><strong>{{ abonelik_ambar_rapor.yeni_sicil }}</strong></div>
+        <div><span>Yeni Sözleşme</span><strong>{{ abonelik_ambar_rapor.yeni_sozlesme }}</strong></div>
+        <div><span>Ambar Talebi</span><strong>{{ abonelik_ambar_rapor.ambar_talebi }}</strong></div>
+        <div><span>İlçe Teslimi</span><strong>{{ abonelik_ambar_rapor.teslim }}</strong></div>
+        <div><span>Hurdaya Ayrılan</span><strong>{{ abonelik_ambar_rapor.hurda }}</strong></div>
+      </div>
+      <div class="da-report-link"><a class="rc33-apply" href="{% url 'abonelik:izleme' %}">Abone Detaylarını Aç</a></div>
+    </section>
+
+    <nav class="rc33-tabs">
+      <button type="button" class="active" data-rc33-tab="icmal">
+        <b>Genel İcmal</b>
+        <span>İlçe / iş türü bazlı adet icmali</span>
+      </button>
+      <button type="button" data-rc33-tab="detay">
+        <b>Detaylı Rapor</b>
+        <span>1 satır = 1 talep / iş emri</span>
+      </button>
+    </nav>
+
+    <section class="rc33-view active" data-rc33-view="icmal">
+      <div class="rc33-view-head">
+        <div>
+          <span>GENEL İCMAL</span>
+          <h2>Talep Adet İcmali</h2>
+          <p>Her satır; ilçe, iş türü, iş alt türü ve talep eden birime göre toplam açılan talep adedini gösterir.</p>
+        </div>
+        <div class="rc33-export">
+          <select id="rc33-icmal-format">
+            <option value="pdf">PDF</option>
+            <option value="xlsx">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+          <button type="button" id="rc33-icmal-download"
+                  data-url-template="{% url 'dashboard:icmal_rapor_indir' 'FORMAT' %}">
+            İndir
+          </button>
+        </div>
+      </div>
+
+      <div class="rc39-icmal-info">
+        <strong>{{ icmal.toplam_talep }} toplam talep</strong>
+        <span>{{ satir_icmal|length }} icmal satırı</span>
+        <span>Seçili tarih aralığına göre otomatik gruplanır.</span>
+      </div>
+
+      <div class="rc39-icmal-scroll">
+        <table class="rc39-icmal-table">
+          <thead>
+            <tr>
+              <th>İlçe</th>
+              <th>İş Türü</th>
+              <th>İş Alt Türü</th>
+              <th>Talep Eden Birim</th>
+              <th>Adet</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for x in satir_icmal %}
+            <tr>
+              <td><strong>{{ x.ilce }}</strong></td>
+              <td>{{ x.is_turu }}</td>
+              <td>{{ x.is_alt_turu }}</td>
+              <td>{{ x.acan_birim }}</td>
+              <td class="rc39-adet">{{ x.adet }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="rc33-empty">Seçilen dönemde kayıt bulunamadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="rc33-view" data-rc33-view="detay" hidden>
+      <div class="rc33-view-head">
+        <div>
+          <span>DETAYLI RAPOR</span>
+          <h2>Talep / İş Emri Kayıtları</h2>
+          <p>Her yatay satır tek bir talebin baştan sona tüm operasyon bilgisidir.</p>
+        </div>
+        <div class="rc33-export">
+          <select id="rc33-detay-format">
+            <option value="pdf">PDF — Geniş Yatay</option>
+            <option value="xlsx">Excel — Yatay</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+          <button type="button" id="rc33-detay-download"
+                  data-url-template="{% url 'dashboard:detayli_rapor_indir' 'FORMAT' %}">
+            İndir
+          </button>
+        </div>
+      </div>
+
+      <div class="rc33-detail-info">
+        <strong>{{ toplam }} kayıt</strong>
+        <span>1 satır = 1 talep / iş emri</span>
+        <span>Şef → saha → süreler → onay → SLA → vatandaş dönüşü</span>
+        <b>Tabloyu sağa / sola kaydırın</b>
+      </div>
+
+      <div class="rc33-top-scroll" id="rc33-top-scroll"><div></div></div>
+
+      <div class="rc33-table-scroll" id="rc33-table-scroll" tabindex="0">
+        <table class="rc33-detail-table" id="rc33-detail-table">
+          <thead>
+            <tr>
+              {% for kolon in kolonlar %}
+                <th>{{ kolon }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for satir in satirlar %}
+            <tr>
+              {% for hucre in satir.cells %}
+                <td class="col-{{ hucre.key }}">
+                  {% if hucre.key == "talep_no" %}
+                    <a href="{% url 'dashboard:talep_detay' satir.pk %}"><strong>{{ hucre.value }}</strong></a>
+                  {% elif hucre.key == "durum" %}
+                    <span class="rc33-status">{{ hucre.value }}</span>
+                  {% elif hucre.key == "sla_atama_sonucu" %}
+                    <span class="rc33-sla {% if 'AŞILDI' in hucre.value or 'Aşıldı' in hucre.value %}bad{% elif 'Yaklaşıyor' in hucre.value %}warn{% else %}ok{% endif %}">{{ hucre.value }}</span>
+                  {% elif hucre.key == "gorsel_durumu" %}
+                    <span class="rc33-proof {% if hucre.value == 'Var' %}yes{% endif %}">{{ hucre.value }}</span>
+                  {% else %}
+                    {{ hucre.value }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr><td colspan="{{ kolonlar|length }}" class="rc33-empty">Seçilen dönemde kayıt bulunamadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="rc33-table-foot">
+        <span>Önizleme en fazla 500 kayıt gösterir.</span>
+        <span>PDF / Excel / CSV çıktısında seçili dönemin tüm kayıtları bulunur.</span>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<div id="rc33-date-data"
+     data-today="{{ bugun }}"
+     data-month-start="{{ bu_ay_baslangic }}"
+     data-seven-start="{{ son_yedi_baslangic }}"
+     hidden></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/report_center_v33.js' %}"></script>
+{% endblock %}
