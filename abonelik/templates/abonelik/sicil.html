@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Vatandaş Sicili | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v56_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v59_abonelik.css' %}">{% endblock %}
+{% block body %}
+<main class="v55-page">
+  <header class="v55-module-head compact-head"><div><span class="v55-eyebrow">ABONE PERSONELİ</span><h1>Vatandaş Sicili</h1><p>Kimlik ve iletişim kayıtlarını geçmişi koruyarak yönetin.</p></div></header>
+  {% include "abonelik/_nav.html" %}
+
+  <section class="v55-toolbar-panel"><form method="get" class="v55-toolbar" autocomplete="off">
+    <label class="grow"><span>Vatandaş Ara</span><input name="q" value="{{ q }}" placeholder="T.C., sicil no, ad soyad, telefon veya e-posta"></label>
+    <label><span>Durum</span><select name="durum"><option value="tumu" {% if durum == 'tumu' %}selected{% endif %}>Tümü</option><option value="aktif" {% if durum == 'aktif' %}selected{% endif %}>Aktif</option><option value="pasif" {% if durum == 'pasif' %}selected{% endif %}>Pasif</option></select></label>
+    <div class="v55-toolbar-actions"><button type="submit">Ara</button><a href="{% url 'abonelik:sicil' %}">Temizle</a></div>
+  </form></section>
+
+  <details id="yeni-sicil" class="v55-accordion action-accordion"><summary><span>＋</span><b>Yeni Vatandaş Sicili</b><small>Yeni kişi kaydı</small></summary><div class="v55-accordion-body">
+    <form method="post" class="v55-form-grid">{% csrf_token %}<input type="hidden" name="islem" value="sicil_ekle">{% include "abonelik/_form_errors.html" with form=sicil_form %}
+      <label><span>T.C. Kimlik No</span>{{ sicil_form.tc_kimlik_no }}</label><label><span>Ad</span>{{ sicil_form.ad }}</label><label><span>Soyad</span>{{ sicil_form.soyad }}</label><label><span>Doğum Tarihi</span>{{ sicil_form.dogum_tarihi }}</label><label><span>Cep Telefonu</span>{{ sicil_form.cep_telefonu }}</label><label><span>E-posta</span>{{ sicil_form.eposta }}</label><label><span>Durum</span>{{ sicil_form.aktif }}</label>
+      <div class="v55-form-actions"><button type="submit">Sicili Kaydet</button></div>
+    </form>
+  </div></details>
+
+  <section class="v55-section"><div class="v55-section-title"><div><h2>Vatandaş Kayıtları</h2></div><small>{{ siciller|length }} kayıt</small></div>
+    <div class="v55-table-wrap"><table class="v55-table selectable"><thead><tr><th>Sicil No</th><th>T.C.</th><th>Ad Soyad</th><th>Doğum Tarihi</th><th>Aktif Telefon</th><th>Aktif E-posta</th><th>Durum</th><th></th></tr></thead><tbody>
+      {% for s in siciller %}<tr class="{% if secili.id == s.id %}selected{% endif %}"><td><b>{{ s.sicil_no }}</b></td><td>{{ s.tc_kimlik_no }}</td><td>{{ s.ad }} {{ s.soyad }}</td><td>{{ s.dogum_tarihi|date:"d.m.Y"|default:"-" }}</td><td>{% for i in s.iletisim_kayitlari.all %}{% if i.aktif and i.tur == 'cep_telefonu' %}{{ i.deger }}{% endif %}{% endfor %}</td><td>{% for i in s.iletisim_kayitlari.all %}{% if i.aktif and i.tur == 'eposta' %}{{ i.deger }}{% endif %}{% endfor %}</td><td><span class="v55-status {% if s.aktif %}ok{% else %}off{% endif %}">{% if s.aktif %}Aktif{% else %}Pasif{% endif %}</span></td><td><a class="v55-row-action" href="?sicil={{ s.id }}&q={{ q|urlencode }}&durum={{ durum }}">Detay</a></td></tr>{% empty %}<tr><td colspan="8" class="v55-empty">Sicil bulunamadı.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  {% if secili %}
+  <section class="v55-record-head"><div><span>{{ secili.sicil_no }}</span><h2>{{ secili.ad }} {{ secili.soyad }}</h2></div><div class="v55-record-actions"><span class="v55-status {% if secili.aktif %}ok{% else %}off{% endif %}">{% if secili.aktif %}Aktif Sicil{% else %}Pasif Sicil{% endif %}</span><form method="post" action="{% url 'abonelik:sicil_toggle' secili.pk %}">{% csrf_token %}<button class="v55-btn" type="submit">{% if secili.aktif %}Pasife Al{% else %}Aktif Yap{% endif %}</button></form></div></section>
+
+  <details class="v55-accordion"><summary><span>01</span><b>Kimlik Bilgileri</b><small>Vatandaş sicil özeti</small></summary><div class="v55-accordion-body"><div class="v55-fields-grid"><div><small>Sicil No</small><b>{{ secili.sicil_no }}</b></div><div><small>T.C.</small><b>{{ secili.tc_kimlik_no }}</b></div><div><small>Ad Soyad</small><b>{{ secili.ad }} {{ secili.soyad }}</b></div><div><small>Doğum Tarihi</small><b>{{ secili.dogum_tarihi|date:"d.m.Y"|default:"-" }}</b></div></div></div></details>
+
+  <details class="v55-accordion"><summary><span>02</span><b>İletişim Geçmişi</b><small>Eski bilgiler silinmez</small></summary><div class="v55-accordion-body">
+    <div class="v55-table-wrap"><table class="v55-table compact"><thead><tr><th>İletişim Türü</th><th>Değer</th><th>Başlangıç</th><th>Bitiş</th><th>Açıklama</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>{% for i in secili.iletisim_kayitlari.all %}<tr><td><span class="v55-enum">{{ i.get_tur_display }}</span></td><td><b>{{ i.deger }}</b></td><td>{{ i.baslangic_tarihi|date:"d.m.Y H:i" }}</td><td>{{ i.bitis_tarihi|date:"d.m.Y H:i"|default:"-" }}</td><td>{{ i.aciklama|default:"-" }}</td><td><span class="v55-status {% if i.aktif %}ok{% else %}off{% endif %}">{% if i.aktif %}Aktif{% else %}Geçmiş{% endif %}</span></td><td>{% if i.aktif %}<form method="post" action="{% url 'abonelik:iletisim_toggle' i.pk %}">{% csrf_token %}<button class="v55-btn" type="submit">Pasife Al</button></form>{% else %}-{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="v55-empty">İletişim geçmişi yok.</td></tr>{% endfor %}</tbody></table></div>
+    <details class="v55-inline-details"><summary>＋ Yeni iletişim bilgisi ekle</summary><form method="post" class="v55-form-grid small">{% csrf_token %}<input type="hidden" name="islem" value="iletisim_ekle">{% include "abonelik/_form_errors.html" with form=iletisim_form %}<input type="hidden" name="sicil_id" value="{{ secili.id }}"><label><span>İletişim Türü</span>{{ iletisim_form.tur }}</label><label><span>Yeni Değer</span>{{ iletisim_form.deger }}</label><label class="wide"><span>Açıklama</span>{{ iletisim_form.aciklama }}</label><div class="v55-form-actions"><button type="submit">Aktif Et</button></div></form></details>
+  </div></details>
+  {% endif %}
+</main>
+{% endblock %}

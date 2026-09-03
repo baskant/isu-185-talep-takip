@@ -1,0 +1,52 @@
+İSU 185 V4 — SAHA MİMARİSİ KAYNAK NOTU
+
+Bu projedeki saha rol adları, İSU'nun kamuya açık güncel organizasyon ve
+ALO 185 hizmet kategorilerinden türetilmiş UYGULAMA ROLLERİDİR.
+Resmî bordro/kadro unvanı iddiası değildir.
+
+Kamuya açık İSU organizasyonunda görülen ilgili alanlar:
+- İlçe Hizmetleri Dairesi / İlçe Koordinasyon
+- İçmesuyu ve Kanalizasyon
+- Su Kayıpları ve Basınç Yönetimi
+  - Kaçak Su Önleme
+  - Su Kayıp Kontrol
+  - SCADA
+- Çevre Koruma ve Kontrol / Laboratuvar
+- Su Arıtma ve İşletme
+  - İçmesuyu Terfiler
+  - İçmesuyu Arıtma Tesisleri
+- Atıksu Arıtma
+  - Atıksu Terfiler
+  - Atıksu Arıtma Tesisleri
+- Elektrik Makine ve Malzeme İkmal
+  - Mekanik Bakım Onarım
+  - Elektrik Bakım Onarım
+- Abone İşleri
+  - Abone Hizmetleri
+  - Yüksek Tüketim Abone Hizmetleri
+
+ALO 185 kamuya açık ihbar başlıklarında:
+- İçmesuyu arızaları
+- Kanalizasyon arızaları
+- Sayaç arızaları
+- Su kirliliği
+- Susuzluk
+- Kaçak su kullanımı
+yer almaktadır.
+
+Proje saha rolleri:
+1. İçmesuyu Arıza Saha
+2. Kanalizasyon ve Yağmursuyu Saha
+3. Sayaç ve Abone Saha
+4. Kaçak Su ve Su Kayıp Kontrol Saha
+5. Su Kalitesi ve Numune Saha
+6. Elektromekanik ve Terfi Saha
+7. Ortak İlçe Saha
+
+Atama algoritması:
+ROL KURALI + AYNI İLÇE + AKTİF + MÜSAİT + İŞ TÜRÜ UZMANLIĞI
+Tam uzman ekip, Ortak İlçe Saha fallback ekibinden önce gösterilir.
+
+Kaynaklar:
+https://www.isu.gov.tr/icerik/detay.aspx?Id=171
+https://www.isu.gov.tr/icerik/detay.aspx?Id=172

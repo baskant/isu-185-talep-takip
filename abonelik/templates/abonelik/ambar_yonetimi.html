@@ -1,0 +1,129 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Ambar Yönetimi | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v56_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v57_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v59_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v60_bilgi_popup.css' %}"><link rel="stylesheet" href="{% static 'css/v61_tum_bilgi_ikonlari.css' %}">{% endblock %}
+{% block body %}
+<main class="v55-page">
+  <header class="v55-module-head compact-head">
+    <div>
+      <span class="v55-eyebrow">{% if mod == 'merkez' %}MERKEZ AMBAR{% else %}İLÇE AMBAR SORUMLUSU{% endif %}</span>
+      <h1>{% if mod == 'merkez' %}Merkez Ambar Yönetimi{% else %}Ambar Yönetimi{% endif %}</h1>
+      <p>{% if mod == 'merkez' %}İlçelerden gelen sayaç taleplerini hazırlayın, sevk edin ve merkez stoğunu izleyin.{% else %}İlçe sayaç stoğunu, merkez ambar taleplerini ve hurda sürecini yönetin.{% endif %}</p>
+    </div>
+    {% if yetki %}<div class="v55-context"><b>{{ yetki.ilce.ad }}</b><span>{{ yetki.ambar.ad }}</span><small>Ambar sorumlusu: {% if yetki.personel.kullanici %}{% firstof yetki.personel.kullanici.get_full_name yetki.personel.kullanici.username "-" %}{% else %}-{% endif %}</small></div>{% elif mod == 'merkez' %}<div class="v55-context"><b>Merkez Ambar</b><span>{{ merkez.ad|default:"Merkez Sayaç Ambarı" }}</span></div>{% endif %}
+  </header>
+
+  {% if mod == 'ilce' %}
+  <div class="v56-flow"><b>İş Akışı</b><span>1. Sayaç talebi oluştur</span><i>→</i><span>2. Merkez hazırlar</span><i>→</i><span>3. Merkez sevk eder</span><i>→</i><span>4. İlçe teslim alır</span></div>
+  {% else %}
+  <div class="v56-flow"><b>İş Akışı</b><span>1. İlçe talebi gelir</span><i>→</i><span>2. Talebi hazırla</span><i>→</i><span>3. Stoktan seç ve sevk et</span><i>→</i><span>4. İlçe teslim alır</span></div>
+  {% endif %}
+
+  <div class="v55-info-strip">
+    {% if mod == 'ilce' %}
+      <span><b>{{ ilce_stok }}</b> İlçe Stok</span><span><b>{{ acik_talep_sayisi }}</b> Açık Talep</span><span><b>{{ hurda_bekleyen_sayisi }}</b> Hurda Bekleyen</span>
+    {% else %}
+      <span><b>{{ merkez_stok }}</b> Merkez Stok</span><span><b>{{ merkez_bekleyen_sayisi }}</b> Bekleyen Talep</span><span><b>{{ sevkte_sayisi }}</b> Sevkte</span>
+    {% endif %}
+  </div>
+
+
+  {% if mod == 'merkez' %}
+  <details class="v55-accordion v60-citizen-panel" open>
+    <summary><span>i</span><b>Vatandaş / Devir Sayaç Bilgileri</b><small>Merkez Ambara ulaşan devir sayaçlarının ayrıntıları</small></summary>
+    <div class="v55-accordion-body">
+      <div class="v60-help">Her kaydın yanındaki <b>i</b> ikonuna tıklayarak ayrıntıları tek pencerede görüntüleyebilirsiniz. Bilgi ikonu Sayaç Talepleri, Sayaç Stoğu ve Ambar Hareket Geçmişi tablolarında da kullanılabilir.</div>
+      <div class="v55-table-wrap"><table class="v55-table v60-info-table"><thead><tr><th>Başvuru</th><th>Vatandaş</th><th>İlçe</th><th>Sayaç Seri No</th><th>Durum</th><th>Bilgi</th></tr></thead><tbody>
+      {% for x in merkez_devir_kayitlari %}
+        <tr>
+          <td><b>{{ x.basvuru_no }}</b><small>{{ x.eski_abone_no|default:"-" }} / {{ x.yeni_abone_no|default:"-" }}</small></td>
+          <td>{{ x.vatandas_ad_soyad|default:"-" }}<small>{{ x.telefon|default:"Telefon yok" }}</small></td>
+          <td>{{ x.ilce|default:"-" }}</td>
+          <td><b>{{ x.sayac_seri_no|default:"-" }}</b><small>{{ x.sayac_marka_model|default:"Marka/model yok" }}</small></td>
+          <td><span class="v55-status wait">{{ x.get_durum_display }}</span></td>
+          <td class="v60-info-cell">
+            <button type="button" class="v60-info-btn" title="Tüm bilgileri görüntüle" aria-label="{{ x.basvuru_no }} tüm bilgilerini görüntüle" onclick="document.getElementById('v60-info-{{ x.pk }}').showModal()">i</button>
+            <dialog class="v60-dialog" id="v60-info-{{ x.pk }}">
+              <div class="v60-dialog-head"><div><span>VATANDAŞ VE İŞLEM DETAYI</span><h3>{{ x.basvuru_no }}</h3><p>Merkez Ambar Personeli bilgi görünümü</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div>
+              <div class="v60-dialog-grid">
+                <section><h4>Vatandaş Bilgileri</h4><dl><div><dt>Ad Soyad</dt><dd>{{ x.vatandas_ad_soyad|default:"-" }}</dd></div><div><dt>T.C. Kimlik No</dt><dd>{{ x.tc_kimlik_no|default:"-" }}</dd></div><div><dt>Telefon</dt><dd>{{ x.telefon|default:"-" }}</dd></div><div><dt>İlçe</dt><dd>{{ x.ilce|default:"-" }}</dd></div><div class="wide"><dt>Hizmet Adresi</dt><dd>{{ x.adres|default:"-" }}</dd></div></dl></section>
+                <section><h4>Abonelik Bilgileri</h4><dl><div><dt>Eski Abone No</dt><dd>{{ x.eski_abone_no|default:"-" }}</dd></div><div><dt>Eski Abone</dt><dd>{{ x.eski_abone_ad_soyad|default:"-" }}</dd></div><div><dt>Yeni Abone No</dt><dd>{{ x.yeni_abone_no|default:"-" }}</dd></div><div><dt>Devir Nedeni</dt><dd>{{ x.get_devir_nedeni_display|default:"-" }}</dd></div><div class="wide"><dt>Açıklama</dt><dd>{{ x.aciklama|default:"-" }}</dd></div></dl></section>
+                <section><h4>Sayaç Bilgileri</h4><dl><div><dt>Seri No</dt><dd>{{ x.sayac_seri_no|default:"-" }}</dd></div><div><dt>Marka / Model</dt><dd>{{ x.sayac_marka_model|default:"-" }}</dd></div><div><dt>Son Endeks</dt><dd>{% if x.sayac_endeks != None %}{{ x.sayac_endeks }}{% else %}-{% endif %}</dd></div><div><dt>Durum</dt><dd>{{ x.get_durum_display }}</dd></div></dl></section>
+                <section><h4>Ambar İşlemleri</h4><dl><div><dt>Merkeze Sevk</dt><dd>{{ x.merkeze_gonderim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Merkez Teslim</dt><dd>{{ x.merkez_teslim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Merkez Kontrol</dt><dd>{{ x.merkez_kontrol_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Depo / Raf</dt><dd>{{ x.merkez_depo_konumu|default:"-" }}</dd></div><div class="wide"><dt>Merkez Ambar Notu</dt><dd>{{ x.merkez_ambar_notu|default:"-" }}</dd></div></dl></section>
+              </div>
+              <div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div>
+            </dialog>
+          </td>
+        </tr>
+      {% empty %}<tr><td colspan="6" class="v55-empty">Merkez Ambara ulaşmış devir sayacı bulunmuyor.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </details>
+  {% endif %}
+
+  {% if mod == 'merkez' %}
+  <details class="v55-accordion action-accordion"><summary><span>＋</span><b>Yeni Sayaç Stok Girişi</b><small>Merkez Ambara fiziksel sayaç kaydı</small></summary><div class="v55-accordion-body">
+    <div class="v61-form-help"><span>Yeni sayaç kaydının hangi bilgilerle stoğa alınacağını görüntüleyin.</span><button type="button" class="v60-info-btn" title="Stok girişi bilgisi" onclick="document.getElementById('v61-stok-giris-yardim').showModal()">i</button></div>
+    <dialog class="v60-dialog" id="v61-stok-giris-yardim"><div class="v60-dialog-head"><div><span>YENİ SAYAÇ STOK GİRİŞİ</span><h3>Merkez Ambar Stok Kaydı</h3><p>Form alanları ve kayıt sonucu</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div><div class="v60-dialog-grid"><section><h4>Girilen Bilgiler</h4><dl><div><dt>Sayaç No</dt><dd>Kurum içi sayaç numarası</dd></div><div><dt>Seri No</dt><dd>Üretici seri numarası</dd></div><div><dt>Marka / Model</dt><dd>Sayaç marka ve modeli</dd></div><div><dt>Sayaç Tipi</dt><dd>Mekanik, akıllı, ön ödemeli veya diğer</dd></div><div><dt>Çap</dt><dd>Sayaç bağlantı çapı (mm)</dd></div><div><dt>Başlangıç Endeksi</dt><dd>Stoğa giriş anındaki endeks değeri</dd></div></dl></section><section><h4>Kayıt Sonucu</h4><dl><div><dt>Fiziksel Konum</dt><dd>Merkez Sayaç Ambarı</dd></div><div><dt>Başlangıç Durumu</dt><dd>Stokta</dd></div><div class="wide"><dt>Hareket Kaydı</dt><dd>Stok girişi Ambar Hareket Geçmişine otomatik işlenir.</dd></div><div class="wide"><dt>Benzersizlik</dt><dd>Sayaç No ve Seri No tekrar edemez.</dd></div></dl></section></div><div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div></dialog>
+    <form method="post" class="v55-form-grid" autocomplete="off">{% csrf_token %}<input type="hidden" name="islem" value="stok_giris">{% include "abonelik/_form_errors.html" with form=stok_giris_form %}
+      <label><span>Sayaç No</span>{{ stok_giris_form.sayac_no }}</label><label><span>Seri No</span>{{ stok_giris_form.seri_no }}</label><label><span>Marka / Model</span>{{ stok_giris_form.marka_model }}</label><label><span>Sayaç Tipi</span>{{ stok_giris_form.sayac_tipi }}</label><label><span>Çap (mm)</span>{{ stok_giris_form.cap_mm }}</label><label><span>Başlangıç Endeksi</span>{{ stok_giris_form.son_endeks }}</label>
+      <div class="v55-system-note">Sayaç No ve Seri No benzersiz tutulur. Kayıt doğrudan Merkez Ambar “Stokta” durumunda açılır ve hareket geçmişine işlenir.</div>
+      <div class="v55-form-actions"><button type="submit">Stok Girişi Yap</button></div>
+    </form>
+  </div></details>
+  {% endif %}
+  {% if mod == 'ilce' %}
+  <details class="v55-accordion action-accordion"><summary><span>＋</span><b>Yeni Sayaç Talebi</b><small>Merkez Ambardan sayaç iste</small></summary><div class="v55-accordion-body"><div class="v61-form-help"><span>Merkez Ambara gönderilecek talep alanlarını ve süreç sonucunu görüntüleyin.</span><button type="button" class="v60-info-btn" title="Sayaç talebi bilgisi" onclick="document.getElementById('v61-yeni-talep-yardim').showModal()">i</button></div><dialog class="v60-dialog" id="v61-yeni-talep-yardim"><div class="v60-dialog-head"><div><span>YENİ SAYAÇ TALEBİ</span><h3>Merkez Ambardan Sayaç İsteği</h3><p>Talep alanları ve iş akışı</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div><div class="v60-dialog-grid"><section><h4>Talep Alanları</h4><dl><div><dt>Sayaç Tipi</dt><dd>İstenen sayaç türü</dd></div><div><dt>Çap</dt><dd>İstenen bağlantı çapı</dd></div><div><dt>Adet</dt><dd>İstenen sayaç miktarı</dd></div><div class="wide"><dt>Gerekçe</dt><dd>Talebin neden oluşturulduğunu açıklayan bilgi</dd></div></dl></section><section><h4>Süreç</h4><dl><div><dt>İlk Durum</dt><dd>Talep Edildi</dd></div><div><dt>Hedef</dt><dd>İlgili ilçe sayaç ambarı</dd></div><div class="wide"><dt>Devam Eden Akış</dt><dd>Merkez hazırlar, sevk eder ve ilçe ambarı teslim alır.</dd></div></dl></section></div><div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div></dialog><form method="post" class="v55-form-grid">{% csrf_token %}<input type="hidden" name="islem" value="sayac_talebi">{% include "abonelik/_form_errors.html" with form=talep_form %}<label><span>Sayaç Tipi</span>{{ talep_form.sayac_tipi }}</label><label><span>Çap (mm)</span>{{ talep_form.cap_mm }}</label><label><span>Adet</span>{{ talep_form.adet }}</label><label class="wide"><span>Gerekçe</span>{{ talep_form.gerekce }}</label><div class="v55-form-actions"><button type="submit">Talebi Gönder</button></div></form></div></details>
+  {% endif %}
+
+  <details class="v55-accordion" open><summary><span>01</span><b>Sayaç Talepleri</b><small>Talep, hazırlama, sevk ve teslim durumu</small></summary><div class="v55-accordion-body"><div class="v55-table-wrap"><table class="v55-table"><thead><tr><th>Talep No</th><th>İlçe</th><th>Hedef Ambar</th><th>Sayaç Tipi</th><th>Çap</th><th>Adet</th><th>Gerekçe</th><th>Durum</th><th>Tarih</th><th>Bilgi</th><th>İşlem</th></tr></thead><tbody>
+  {% for t in talepler %}<tr><td><b>{{ t.talep_no }}</b></td><td>{{ t.yetki.ilce.ad }}</td><td>{{ t.hedef_ambar.ad }}</td><td><span class="v55-enum">{{ t.get_sayac_tipi_display }}</span></td><td>{{ t.cap_mm }} mm</td><td>{{ t.adet }}</td><td>{{ t.gerekce }}{% if t.not_alani %}<small>{{ t.not_alani }}</small>{% endif %}</td><td><span class="v55-status {% if t.durum == 'teslim_alindi' %}ok{% elif t.durum == 'reddedildi' %}off{% else %}wait{% endif %}">{{ t.get_durum_display }}</span></td><td>{{ t.talep_tarihi|date:"d.m.Y H:i" }}</td>
+    <td class="v60-info-cell">
+      <button type="button" class="v60-info-btn" title="Sayaç talebi bilgilerini görüntüle" aria-label="{{ t.talep_no }} talep bilgilerini görüntüle" onclick="document.getElementById('v61-talep-{{ t.pk }}').showModal()">i</button>
+      <dialog class="v60-dialog" id="v61-talep-{{ t.pk }}">
+        <div class="v60-dialog-head"><div><span>SAYAÇ TALEBİ DETAYI</span><h3>{{ t.talep_no }}</h3><p>Talep, hazırlama, sevk ve teslim bilgileri</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div>
+        <div class="v60-dialog-grid">
+          <section><h4>Talep Bilgileri</h4><dl><div><dt>Talep No</dt><dd>{{ t.talep_no }}</dd></div><div><dt>Durum</dt><dd>{{ t.get_durum_display }}</dd></div><div><dt>İlçe</dt><dd>{{ t.yetki.ilce.ad|default:"-" }}</dd></div><div><dt>Talep Eden</dt><dd>{% if t.olusturan %}{% firstof t.olusturan.get_full_name t.olusturan.username "-" %}{% else %}-{% endif %}</dd></div><div class="wide"><dt>Gerekçe</dt><dd>{{ t.gerekce|default:"-" }}</dd></div><div class="wide"><dt>Not</dt><dd>{{ t.not_alani|default:"-" }}</dd></div></dl></section>
+          <section><h4>Sayaç İhtiyacı</h4><dl><div><dt>Sayaç Tipi</dt><dd>{{ t.get_sayac_tipi_display }}</dd></div><div><dt>Çap</dt><dd>{{ t.cap_mm }} mm</dd></div><div><dt>Adet</dt><dd>{{ t.adet }}</dd></div><div><dt>Ambar Sorumlusu</dt><dd>{% if t.yetki.personel.kullanici %}{% firstof t.yetki.personel.kullanici.get_full_name t.yetki.personel.kullanici.username "-" %}{% else %}-{% endif %}</dd></div></dl></section>
+          <section><h4>Ambar Bilgileri</h4><dl><div><dt>Kaynak Ambar</dt><dd>{{ t.kaynak_ambar.ad|default:"-" }}</dd></div><div><dt>Hedef Ambar</dt><dd>{{ t.hedef_ambar.ad|default:"-" }}</dd></div><div><dt>Merkez İşlem Yapan</dt><dd>{% if t.merkez_islem_yapan %}{% firstof t.merkez_islem_yapan.get_full_name t.merkez_islem_yapan.username "-" %}{% else %}-{% endif %}</dd></div><div><dt>İlçe</dt><dd>{{ t.yetki.ilce.ad|default:"-" }}</dd></div></dl></section>
+          <section><h4>Tarih Bilgileri</h4><dl><div><dt>Talep Tarihi</dt><dd>{{ t.talep_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Sevk Tarihi</dt><dd>{{ t.sevk_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Teslim Tarihi</dt><dd>{{ t.teslim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Güncel Durum</dt><dd>{{ t.get_durum_display }}</dd></div></dl></section>
+        </div>
+        <div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div>
+      </dialog>
+    </td><td>
+    {% if mod == 'merkez' and t.durum == 'talep_edildi' %}<div class="v56-action-stack"><form method="post" action="{% url 'abonelik:ambar_talep_durum' t.pk 'hazirla' %}">{% csrf_token %}<button class="v55-btn primary">Hazırla</button></form><form method="post" action="{% url 'abonelik:ambar_talep_durum' t.pk 'reddet' %}" onsubmit="return confirm('Bu sayaç talebi reddedilsin mi?')">{% csrf_token %}<button class="v55-btn danger">Reddet</button></form></div>
+    {% elif mod == 'merkez' and t.durum == 'hazirlaniyor' %}<div class="v56-action-stack"><form method="post" action="{% url 'abonelik:ambar_talep_durum' t.pk 'sevk-et' %}">{% csrf_token %}<button class="v55-btn primary">İlçeye Sevk Et</button></form><form method="post" action="{% url 'abonelik:ambar_talep_durum' t.pk 'reddet' %}" onsubmit="return confirm('Bu sayaç talebi reddedilsin mi?')">{% csrf_token %}<button class="v55-btn danger">Reddet</button></form></div>
+    {% elif t.durum == 'sevk_edildi' and mod == 'ilce' %}<form method="post" action="{% url 'abonelik:ambar_talep_durum' t.pk 'teslim-al' %}">{% csrf_token %}<button class="v55-btn primary">Teslim Al</button></form>{% else %}-{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="11" class="v55-empty">Sayaç talebi bulunmuyor.</td></tr>{% endfor %}
+  </tbody></table></div></div></details>
+
+  <details class="v55-accordion"><summary><span>02</span><b>{% if mod == 'merkez' %}Merkez Sayaç Stoğu{% else %}İlçe Sayaç Stoğu{% endif %}</b><small>Sayaç no, seri no, tip ve fiziksel konum</small></summary><div class="v55-accordion-body"><div class="v55-table-wrap"><table class="v55-table"><thead><tr><th>Sayaç No</th><th>Seri No</th><th>Marka / Model</th><th>Tip</th><th>Çap</th><th>Durum</th><th>Fiziksel Ambar</th><th>Bilgi</th></tr></thead><tbody>{% for s in sayaclar %}<tr><td><b>{{ s.sayac_no }}</b></td><td>{{ s.seri_no }}</td><td>{{ s.marka_model|default:"-" }}</td><td><span class="v55-enum">{{ s.get_sayac_tipi_display }}</span></td><td>{{ s.cap_mm }} mm</td><td><span class="v55-status {% if s.durum == 'stokta' %}ok{% elif s.durum == 'hurda' or s.durum == 'kullanim_disi' %}off{% else %}wait{% endif %}">{{ s.get_durum_display }}</span></td><td>{{ s.ambar.ad|default:"Sevk sürecinde" }}</td>
+    <td class="v60-info-cell"><button type="button" class="v60-info-btn" title="Sayaç bilgilerini görüntüle" aria-label="{{ s.sayac_no }} sayaç bilgilerini görüntüle" onclick="document.getElementById('v61-sayac-{{ s.pk }}').showModal()">i</button>
+      <dialog class="v60-dialog" id="v61-sayac-{{ s.pk }}"><div class="v60-dialog-head"><div><span>SAYAÇ STOK DETAYI</span><h3>{{ s.sayac_no }}</h3><p>Envanter ve fiziksel ambar bilgileri</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div>
+        <div class="v60-dialog-grid">
+          <section><h4>Sayaç Kimliği</h4><dl><div><dt>Sayaç No</dt><dd>{{ s.sayac_no }}</dd></div><div><dt>Seri No</dt><dd>{{ s.seri_no }}</dd></div><div><dt>Marka / Model</dt><dd>{{ s.marka_model|default:"-" }}</dd></div><div><dt>Sayaç Tipi</dt><dd>{{ s.get_sayac_tipi_display }}</dd></div></dl></section>
+          <section><h4>Teknik Bilgiler</h4><dl><div><dt>Çap</dt><dd>{{ s.cap_mm }} mm</dd></div><div><dt>Son Endeks</dt><dd>{% if s.son_endeks != None %}{{ s.son_endeks }}{% else %}-{% endif %}</dd></div><div><dt>Durum</dt><dd>{{ s.get_durum_display }}</dd></div><div><dt>Aktif Kayıt</dt><dd>{% if s.aktif %}Evet{% else %}Hayır{% endif %}</dd></div></dl></section>
+          <section><h4>Ambar Bilgileri</h4><dl><div><dt>Fiziksel Ambar</dt><dd>{{ s.ambar.ad|default:"Sevk sürecinde" }}</dd></div><div><dt>Ambar Türü</dt><dd>{{ s.ambar.get_tur_display|default:"-" }}</dd></div><div class="wide"><dt>Hurda Nedeni</dt><dd>{{ s.hurda_nedeni|default:"-" }}</dd></div></dl></section>
+          <section><h4>Kayıt Tarihleri</h4><dl><div><dt>Oluşturulma</dt><dd>{{ s.olusturulma_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Son Güncelleme</dt><dd>{{ s.guncellenme_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div></dl></section>
+        </div><div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div></dialog>
+    </td></tr>{% empty %}<tr><td colspan="8" class="v55-empty">Stok kaydı yok.</td></tr>{% endfor %}</tbody></table></div></div></details>
+
+  {% if mod == 'ilce' %}
+  <details class="v55-accordion"><summary><span>03</span><b>Hurda Değerlendirme</b><small>Kullanım dışı sayaçları Hurda Ambara yönlendir</small></summary><div class="v55-accordion-body"><div class="v55-table-wrap"><table class="v55-table"><thead><tr><th>Sayaç No</th><th>Seri No</th><th>Marka / Model</th><th>Durum</th><th>Bilgi</th><th>İşlem</th></tr></thead><tbody>{% for s in kullanim_disi %}<tr><td><b>{{ s.sayac_no }}</b></td><td>{{ s.seri_no }}</td><td>{{ s.marka_model|default:"-" }}</td><td><span class="v55-status off">{{ s.get_durum_display }}</span></td>
+    <td class="v60-info-cell"><button type="button" class="v60-info-btn" title="Kullanım dışı sayaç bilgilerini görüntüle" aria-label="{{ s.sayac_no }} kullanım dışı sayaç bilgilerini görüntüle" onclick="document.getElementById('v61-hurda-{{ s.pk }}').showModal()">i</button>
+      <dialog class="v60-dialog" id="v61-hurda-{{ s.pk }}"><div class="v60-dialog-head"><div><span>HURDA DEĞERLENDİRME DETAYI</span><h3>{{ s.sayac_no }}</h3><p>Kullanım dışı sayaç bilgileri</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div>
+        <div class="v60-dialog-grid"><section><h4>Sayaç Bilgileri</h4><dl><div><dt>Sayaç No</dt><dd>{{ s.sayac_no }}</dd></div><div><dt>Seri No</dt><dd>{{ s.seri_no }}</dd></div><div><dt>Marka / Model</dt><dd>{{ s.marka_model|default:"-" }}</dd></div><div><dt>Tip</dt><dd>{{ s.get_sayac_tipi_display }}</dd></div><div><dt>Çap</dt><dd>{{ s.cap_mm }} mm</dd></div><div><dt>Son Endeks</dt><dd>{% if s.son_endeks != None %}{{ s.son_endeks }}{% else %}-{% endif %}</dd></div></dl></section><section><h4>Durum ve Ambar</h4><dl><div><dt>Durum</dt><dd>{{ s.get_durum_display }}</dd></div><div><dt>Fiziksel Ambar</dt><dd>{{ s.ambar.ad|default:"-" }}</dd></div><div class="wide"><dt>Mevcut Hurda Nedeni</dt><dd>{{ s.hurda_nedeni|default:"Henüz girilmedi" }}</dd></div><div><dt>Oluşturulma</dt><dd>{{ s.olusturulma_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div><dt>Son Güncelleme</dt><dd>{{ s.guncellenme_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div></dl></section></div>
+        <div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div></dialog>
+    </td><td><form method="post" action="{% url 'abonelik:hurdaya_gonder' s.pk %}" class="v55-inline-form">{% csrf_token %}<input name="neden" placeholder="Hurda nedeni" required><button class="v55-btn danger">Hurda Ambara Gönder</button></form></td></tr>{% empty %}<tr><td colspan="6" class="v55-empty">Hurda değerlendirmesi bekleyen sayaç yok.</td></tr>{% endfor %}</tbody></table></div></div></details>
+  {% endif %}
+
+  <details class="v55-accordion"><summary><span>{% if mod == 'ilce' %}04{% else %}03{% endif %}</span><b>Ambar Hareket Geçmişi</b><small>Talep, sevk, teslim ve stok hareketleri</small></summary><div class="v55-accordion-body"><div class="v55-table-wrap"><table class="v55-table"><thead><tr><th>Tarih</th><th>İşlem</th><th>Sayaç</th><th>Kaynak</th><th>Hedef</th><th>Kullanıcı</th><th>Açıklama</th><th>Bilgi</th></tr></thead><tbody>{% for h in hareketler %}<tr><td>{{ h.tarih|date:"d.m.Y H:i" }}</td><td><span class="v55-enum">{{ h.get_islem_display }}</span></td><td>{{ h.sayac.sayac_no|default:"-" }}</td><td>{{ h.kaynak_ambar.ad|default:"-" }}</td><td>{{ h.hedef_ambar.ad|default:"-" }}</td><td>{% if h.kullanici %}{{ h.kullanici.username }}{% else %}Sistem{% endif %}</td><td>{{ h.aciklama }}</td>
+    <td class="v60-info-cell"><button type="button" class="v60-info-btn" title="Ambar hareketi bilgilerini görüntüle" aria-label="Ambar hareketi bilgilerini görüntüle" onclick="document.getElementById('v61-hareket-{{ h.pk }}').showModal()">i</button>
+      <dialog class="v60-dialog" id="v61-hareket-{{ h.pk }}"><div class="v60-dialog-head"><div><span>AMBAR HAREKET DETAYI</span><h3>{{ h.get_islem_display }}</h3><p>{{ h.tarih|date:"d.m.Y H:i" }}</p></div><button type="button" class="v60-close" onclick="this.closest('dialog').close()" aria-label="Kapat">×</button></div>
+        <div class="v60-dialog-grid">
+          <section><h4>Hareket Bilgileri</h4><dl><div><dt>İşlem</dt><dd>{{ h.get_islem_display }}</dd></div><div><dt>Tarih</dt><dd>{{ h.tarih|date:"d.m.Y H:i" }}</dd></div><div><dt>Kullanıcı</dt><dd>{% if h.kullanici %}{% firstof h.kullanici.get_full_name h.kullanici.username "Sistem" %}{% else %}Sistem{% endif %}</dd></div><div><dt>Sayaç</dt><dd>{{ h.sayac.sayac_no|default:"-" }}</dd></div><div class="wide"><dt>Açıklama</dt><dd>{{ h.aciklama|default:"-" }}</dd></div></dl></section>
+          <section><h4>Ambar Yönü</h4><dl><div><dt>Kaynak</dt><dd>{{ h.kaynak_ambar.ad|default:"-" }}</dd></div><div><dt>Hedef</dt><dd>{{ h.hedef_ambar.ad|default:"-" }}</dd></div><div><dt>Sayaç Seri No</dt><dd>{{ h.sayac.seri_no|default:"-" }}</dd></div><div><dt>Sayaç Durumu</dt><dd>{{ h.sayac.get_durum_display|default:"-" }}</dd></div></dl></section>
+          {% if h.talep %}<section><h4>Bağlı Sayaç Talebi</h4><dl><div><dt>Talep No</dt><dd>{{ h.talep.talep_no }}</dd></div><div><dt>Durum</dt><dd>{{ h.talep.get_durum_display }}</dd></div><div><dt>İlçe</dt><dd>{{ h.talep.yetki.ilce.ad|default:"-" }}</dd></div><div><dt>Adet</dt><dd>{{ h.talep.adet }}</dd></div><div><dt>Sayaç Tipi</dt><dd>{{ h.talep.get_sayac_tipi_display }}</dd></div><div><dt>Çap</dt><dd>{{ h.talep.cap_mm }} mm</dd></div><div class="wide"><dt>Gerekçe</dt><dd>{{ h.talep.gerekce|default:"-" }}</dd></div></dl></section>{% endif %}
+        </div><div class="v60-dialog-actions"><button type="button" class="v55-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div></dialog>
+    </td></tr>{% empty %}<tr><td colspan="8" class="v55-empty">Hareket kaydı yok.</td></tr>{% endfor %}</tbody></table></div></div></details>
+</main>
+{% endblock %}

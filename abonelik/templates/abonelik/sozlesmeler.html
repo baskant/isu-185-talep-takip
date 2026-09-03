@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Sözleşmeler | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v56_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v59_abonelik.css' %}">{% endblock %}
+{% block body %}
+<main class="v55-page">
+  <header class="v55-module-head compact-head"><div><span class="v55-eyebrow">ABONE PERSONELİ</span><h1>Sözleşmeler</h1><p>Sicil, abone numarası ve hizmet adresi bağlantılarını yönetin.</p></div></header>
+  {% include "abonelik/_nav.html" %}
+
+  <section class="v55-toolbar-panel"><form method="get" class="v55-toolbar" autocomplete="off">
+    <label class="grow"><span>Sözleşme Ara</span><input name="q" value="{{ q }}" placeholder="Abone no, sözleşme no, T.C., sicil no veya adres kodu"></label>
+    <label><span>Durum</span><select name="durum"><option value="tumu" {% if durum == 'tumu' %}selected{% endif %}>Tümü</option><option value="aktif" {% if durum == 'aktif' %}selected{% endif %}>Aktif</option><option value="pasif" {% if durum == 'pasif' %}selected{% endif %}>Pasif</option></select></label>
+    <label><span>Tür</span><select name="tur"><option value="">Tümü</option>{% for value,label in abonelik_turleri %}<option value="{{ value }}" {% if abonelik_turu == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+    <label><span>Başvuru Kaynağı</span><select name="kaynak"><option value="">Tümü</option>{% for value,label in kaynaklar %}<option value="{{ value }}" {% if kaynak == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+    <div class="v55-toolbar-actions"><button type="submit">Filtrele</button><a href="{% url 'abonelik:sozlesmeler' %}">Temizle</a></div>
+  </form></section>
+
+  <details class="v55-accordion action-accordion" {% if secili_sicil %}open{% endif %}><summary><span>＋</span><b>Yeni Sözleşme</b><small>Vatandaş sicili + hizmet adresi</small></summary><div class="v55-accordion-body">
+    <div class="v55-two-pane">
+      <div><div class="v55-subtitle">1. Vatandaş Seç</div><div class="v55-table-wrap short"><table class="v55-table compact"><thead><tr><th>Sicil No</th><th>T.C.</th><th>Vatandaş</th><th></th></tr></thead><tbody>{% for s in siciller %}<tr class="{% if secili_sicil.id == s.id %}selected{% endif %}"><td>{{ s.sicil_no }}</td><td>{{ s.tc_kimlik_no }}</td><td>{{ s.ad }} {{ s.soyad }}</td><td><a class="v55-row-action" href="?sicil={{ s.id }}">Seç</a></td></tr>{% endfor %}</tbody></table></div></div>
+      <div>{% if secili_sicil %}<div class="v55-subtitle">2. Sözleşme Bilgileri · {{ secili_sicil.ad }} {{ secili_sicil.soyad }}</div><form method="post" class="v55-form-grid">{% csrf_token %}<input type="hidden" name="islem" value="sozlesme_ekle">{% include "abonelik/_form_errors.html" with form=form %}<input type="hidden" name="sicil_id" value="{{ secili_sicil.id }}"><label class="wide"><span>Hizmet Adresi</span>{{ form.adres }}</label><label><span>Abonelik Türü</span>{{ form.abonelik_turu }}</label><label><span>Başvuru Kaynağı</span>{{ form.kaynak }}</label><label><span>Başlangıç Tarihi</span>{{ form.baslangic_tarihi }}</label><label class="wide"><span>Açıklama</span>{{ form.aciklama }}</label><div class="v55-system-note">Abone No ve Sözleşme No sistem tarafından otomatik oluşturulur.</div><div class="v55-form-actions"><button type="submit">Sözleşme Oluştur</button></div></form>{% else %}<div class="v55-empty">Sözleşme oluşturmak için soldan bir vatandaş seçin.</div>{% endif %}</div>
+    </div>
+  </div></details>
+
+  <section class="v55-section"><div class="v55-section-title"><div><h2>Sözleşme Kayıtları</h2></div><small>{{ sozlesmeler|length }} kayıt</small></div><div class="v55-table-wrap"><table class="v55-table"><thead><tr><th>Abone No</th><th>Sözleşme No</th><th>Sicil No</th><th>Vatandaş</th><th>Adres Kodu</th><th>İlçe</th><th>Tür</th><th>Başvuru Kaynağı</th><th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>
+    {% for s in sozlesmeler %}<tr><td><b>{{ s.abone_no }}</b></td><td>{{ s.sozlesme_no }}</td><td>{{ s.sicil.sicil_no }}</td><td>{{ s.sicil.ad }} {{ s.sicil.soyad }}</td><td>{{ s.adres.adres_kodu }}</td><td>{{ s.adres.ilce.ad }}</td><td><span class="v55-enum">{{ s.get_abonelik_turu_display }}</span></td><td><span class="v55-enum">{{ s.get_kaynak_display }}</span></td><td>{{ s.baslangic_tarihi|date:"d.m.Y" }}</td><td>{{ s.bitis_tarihi|date:"d.m.Y"|default:"-" }}</td><td><span class="v55-status {% if s.aktif %}ok{% else %}off{% endif %}">{% if s.aktif %}Aktif{% else %}Pasif{% endif %}</span></td><td><form method="post" action="{% url 'abonelik:sozlesme_toggle' s.pk %}">{% csrf_token %}<button class="v55-btn" type="submit">{% if s.aktif %}Pasife Al{% else %}Aktif Yap{% endif %}</button></form></td></tr>{% empty %}<tr><td colspan="12" class="v55-empty">Sözleşme bulunamadı.</td></tr>{% endfor %}
+  </tbody></table></div></section>
+</main>
+{% endblock %}

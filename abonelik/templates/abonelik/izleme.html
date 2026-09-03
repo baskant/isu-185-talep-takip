@@ -1,0 +1,101 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Abone İşlemleri | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v56_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v57_abonelik.css' %}"><link rel="stylesheet" href="{% static 'css/v59_abonelik.css' %}">{% endblock %}
+{% block body %}
+<main class="v55-page">
+  <header class="v55-module-head compact-head">
+    <div><span class="v55-eyebrow">ABONE PERSONELİ</span><h1>Abone İşlemleri</h1><p>Abone, sicil, sözleşme, adres ve sayaç bağlantılarını tek ekranda sorgulayın ve yönetin.</p></div>
+  </header>
+  {% include "abonelik/_nav.html" %}
+
+  <section class="v55-toolbar-panel">
+    <form method="get" class="v55-toolbar" autocomplete="off">
+      <label class="grow"><span>Abone / Vatandaş / Sayaç Ara</span><input name="q" value="{{ q }}" placeholder="Abone no, T.C., sicil no, sözleşme no, adres kodu, sayaç no veya seri no"></label>
+      <label><span>Durum</span><select name="durum"><option value="tumu" {% if durum == 'tumu' %}selected{% endif %}>Tümü</option><option value="aktif" {% if durum == 'aktif' %}selected{% endif %}>Aktif</option><option value="pasif" {% if durum == 'pasif' %}selected{% endif %}>Pasif</option></select></label>
+      <label><span>Abonelik Türü</span><select name="tur"><option value="">Tümü</option>{% for value,label in abonelik_turleri %}<option value="{{ value }}" {% if abonelik_turu == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <div class="v55-toolbar-actions"><button type="submit">Sorgula</button><a href="{% url 'abonelik:izleme' %}">Temizle</a></div>
+    </form>
+  </section>
+
+  <div class="v57-quick-actions">
+    <a href="{% url 'abonelik:sicil' %}#yeni-sicil">＋ Yeni Vatandaş Sicili</a>
+    <a href="{% url 'abonelik:sozlesmeler' %}">＋ Yeni Sözleşme / Abonelik</a>
+    <span>Yeni abonelik: önce sicil, sonra sözleşme, sonra sayaç bağlantısı.</span>
+  </div>
+
+  <section class="v55-section">
+    <div class="v55-section-title"><div><h2>Abonelik Kayıtları</h2></div><small>{{ sonuclar|length }} kayıt</small></div>
+    <div class="v55-table-wrap">
+      <table class="v55-table selectable">
+        <thead><tr><th>Abone No</th><th>Sicil No</th><th>T.C.</th><th>Vatandaş</th><th>Sözleşme No</th><th>Adres Kodu</th><th>İlçe</th><th>Tür</th><th>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for s in sonuclar %}
+          <tr class="{% if secili.id == s.id %}selected{% endif %}">
+            <td><b>{{ s.abone_no }}</b></td><td>{{ s.sicil.sicil_no }}</td><td>{{ s.sicil.tc_kimlik_no }}</td><td>{{ s.sicil.ad }} {{ s.sicil.soyad }}</td><td>{{ s.sozlesme_no }}</td><td>{{ s.adres.adres_kodu }}</td><td>{{ s.adres.ilce.ad }}</td><td><span class="v55-enum">{{ s.get_abonelik_turu_display }}</span></td><td><span class="v55-status {% if s.aktif %}ok{% else %}off{% endif %}">{% if s.aktif %}Aktif{% else %}Pasif{% endif %}</span></td><td><a class="v55-row-action" href="?sozlesme={{ s.id }}&q={{ q|urlencode }}&durum={{ durum }}&tur={{ abonelik_turu }}">Detay</a></td>
+          </tr>
+        {% empty %}<tr><td colspan="10" class="v55-empty">Arama kriterlerine uygun abonelik bulunamadı.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if secili %}
+  <section class="v55-record-head">
+    <div><span>{{ secili.abone_no }}</span><h2>{{ secili.sicil.ad }} {{ secili.sicil.soyad }}</h2></div>
+    <div class="v55-record-actions">
+      <span class="v55-status {% if secili.aktif %}ok{% else %}off{% endif %}">{% if secili.aktif %}Aktif Abonelik{% else %}Pasif Abonelik{% endif %}</span>
+      <a class="v55-btn" href="{% url 'abonelik:sicil' %}?sicil={{ secili.sicil_id }}">Sicil Yönet</a>
+      <a class="v55-btn" href="{% url 'abonelik:sozlesmeler' %}?sicil={{ secili.sicil_id }}">Sözleşme Yönet</a>
+    </div>
+  </section>
+
+  <details class="v55-accordion" open>
+    <summary><span>01</span><b>Vatandaş Sicili ve İletişim</b><small>Güncel bilgi + değişiklik geçmişi</small></summary>
+    <div class="v55-accordion-body">
+      <div class="v55-fields-grid"><div><small>Sicil No</small><b>{{ secili.sicil.sicil_no }}</b></div><div><small>T.C.</small><b>{{ secili.sicil.tc_kimlik_no }}</b></div><div><small>Ad Soyad</small><b>{{ secili.sicil.ad }} {{ secili.sicil.soyad }}</b></div><div><small>Doğum Tarihi</small><b>{{ secili.sicil.dogum_tarihi|date:"d.m.Y"|default:"-" }}</b></div></div>
+      <div class="v55-table-wrap detail-table"><table class="v55-table compact"><thead><tr><th>İletişim Türü</th><th>Değer</th><th>Başlangıç</th><th>Bitiş</th><th>Durum</th></tr></thead><tbody>
+      {% for i in secili.sicil.iletisim_kayitlari.all %}<tr><td><span class="v55-enum">{{ i.get_tur_display }}</span></td><td><b>{{ i.deger }}</b></td><td>{{ i.baslangic_tarihi|date:"d.m.Y H:i" }}</td><td>{{ i.bitis_tarihi|date:"d.m.Y H:i"|default:"-" }}</td><td><span class="v55-status {% if i.aktif %}ok{% else %}off{% endif %}">{% if i.aktif %}Aktif{% else %}Geçmiş{% endif %}</span></td></tr>{% empty %}<tr><td colspan="5" class="v55-empty">İletişim kaydı yok.</td></tr>{% endfor %}
+      </tbody></table></div>
+      <details class="v55-inline-details v57-action-box"><summary>＋ Telefon / E-posta Güncelle</summary>
+        <form method="post" action="{% url 'abonelik:izleme_iletisim_ekle' secili.pk %}" class="v55-form-grid small" autocomplete="off">{% csrf_token %}{% include "abonelik/_form_errors.html" with form=iletisim_form %}
+          <label><span>İletişim Türü</span>{{ iletisim_form.tur }}</label><label><span>Yeni Değer</span>{{ iletisim_form.deger }}</label><label class="wide"><span>Açıklama</span>{{ iletisim_form.aciklama }}</label>
+          <div class="v55-system-note">Aynı türdeki mevcut aktif bilgi silinmez; otomatik olarak geçmiş kayda alınır.</div>
+          <div class="v55-form-actions"><button type="submit">Yeni Bilgiyi Aktif Et</button></div>
+        </form>
+      </details>
+    </div>
+  </details>
+
+  <details class="v55-accordion" open>
+    <summary><span>02</span><b>Sözleşme ve Hizmet Adresi</b><small>Abone No + adres tablosu</small></summary>
+    <div class="v55-accordion-body">
+      <div class="v55-table-wrap"><table class="v55-table compact"><thead><tr><th>Sözleşme No</th><th>Abone No</th><th>Adres Kodu</th><th>Hizmet Adresi</th><th>Tür</th><th>Başvuru Kaynağı</th><th>Başlangıç</th><th>Bitiş</th><th>Durum</th></tr></thead><tbody><tr>
+        <td><b>{{ secili.sozlesme_no }}</b></td><td><b>{{ secili.abone_no }}</b></td><td>{{ secili.adres.adres_kodu }}</td><td>{{ secili.adres.tam_adres }}</td><td><span class="v55-enum">{{ secili.get_abonelik_turu_display }}</span></td><td><span class="v55-enum">{{ secili.get_kaynak_display }}</span></td><td>{{ secili.baslangic_tarihi|date:"d.m.Y" }}</td><td>{{ secili.bitis_tarihi|date:"d.m.Y"|default:"-" }}</td><td><span class="v55-status {% if secili.aktif %}ok{% else %}off{% endif %}">{% if secili.aktif %}Aktif{% else %}Pasif{% endif %}</span></td>
+      </tr></tbody></table></div>
+      <div class="v57-section-actions"><a class="v55-btn" href="{% url 'abonelik:sozlesmeler' %}?sicil={{ secili.sicil_id }}">Yeni Sözleşme / Geçmişi Aç</a><span>Sözleşme kapatıldığında kayıt silinmez; pasif ve bitiş tarihli olarak saklanır.</span></div>
+    </div>
+  </details>
+
+  <details class="v55-accordion" open>
+    <summary><span>03</span><b>Abone Sayaç Tablosu</b><small>Sayaç No + Seri No + kullanım geçmişi</small></summary>
+    <div class="v55-accordion-body">
+      <div class="v55-table-wrap"><table class="v55-table compact"><thead><tr><th>Sayaç No</th><th>Seri No</th><th>Marka / Model</th><th>Tip</th><th>Çap</th><th>Takılma</th><th>Sökülme</th><th>Durum</th><th>Bulunduğu Yer</th><th>İşlem</th></tr></thead><tbody>
+      {% for b in secili.sayac_baglantilari.all %}<tr><td><b>{{ b.sayac.sayac_no }}</b></td><td>{{ b.sayac.seri_no }}</td><td>{{ b.sayac.marka_model|default:"-" }}</td><td><span class="v55-enum">{{ b.sayac.get_sayac_tipi_display }}</span></td><td>{{ b.sayac.cap_mm }} mm</td><td>{{ b.takilma_tarihi|date:"d.m.Y" }}</td><td>{{ b.sokulme_tarihi|date:"d.m.Y"|default:"-" }}</td><td><span class="v55-status {% if b.aktif %}ok{% else %}off{% endif %}">{{ b.sayac.get_durum_display }}</span></td><td>{{ b.sayac.ambar.ad|default:"Abone adresi" }}</td><td>{% if b.aktif %}<form method="post" action="{% url 'abonelik:sayac_kullanim_disi' b.pk %}" onsubmit="return confirm('Sayaç kullanım dışı olarak işaretlensin mi?')">{% csrf_token %}<button class="v55-btn danger" type="submit">Kullanım Dışı</button></form>{% else %}-{% endif %}</td></tr>{% empty %}<tr><td colspan="10" class="v55-empty">Bu sözleşmeye bağlı sayaç bulunmuyor.</td></tr>{% endfor %}
+      </tbody></table></div>
+
+      {% if secili.aktif %}
+      <details class="v55-inline-details v57-action-box"><summary>＋ Stoktan Sayaç Ata / Sayaç Değiştir <small>({{ stok_sayac_sayisi }} uygun stok)</small></summary>
+        {% if stok_sayac_sayisi %}
+        <form method="post" action="{% url 'abonelik:sayac_ata' secili.pk %}" class="v55-form-grid small">{% csrf_token %}{% include "abonelik/_form_errors.html" with form=sayac_atama_form %}
+          <label class="wide"><span>İlçe Ambarındaki Sayaç</span>{{ sayac_atama_form.sayac }}</label><label><span>Takılma Tarihi</span>{{ sayac_atama_form.takilma_tarihi }}</label><label><span>İlk Endeks</span>{{ sayac_atama_form.ilk_endeks }}</label><label class="wide"><span>İşlem Notu</span>{{ sayac_atama_form.aciklama }}</label>
+          <div class="v55-system-note">Aktif sayaç varsa eski bağlantı kapatılır ve sayaç “Kullanım Dışı” kuyruğuna alınır. Geçmiş kayıt silinmez.</div>
+          <div class="v55-form-actions"><button type="submit">Sayacı Aboneliğe Bağla</button></div>
+        </form>
+        {% else %}<div class="v55-empty">{{ secili.adres.ilce.ad }} ilçe ambarında takılmaya hazır sayaç bulunmuyor. Ambar yetkili şef, Merkez Ambardan sayaç talep ederek stoğu tamamlamalıdır.</div>{% endif %}
+      </details>
+      {% endif %}
+    </div>
+  </details>
+  {% endif %}
+</main>
+{% endblock %}

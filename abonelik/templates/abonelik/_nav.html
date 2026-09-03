@@ -1,0 +1,5 @@
+<nav class="v55-tabs" aria-label="Abonelik modülü">
+  <a class="{% if request.resolver_match.url_name == 'izleme' %}active{% endif %}" href="{% url 'abonelik:izleme' %}">Abone İşlemleri</a>
+  <a class="{% if request.resolver_match.url_name == 'sicil' %}active{% endif %}" href="{% url 'abonelik:sicil' %}">Vatandaş Sicili</a>
+  <a class="{% if request.resolver_match.url_name == 'sozlesmeler' %}active{% endif %}" href="{% url 'abonelik:sozlesmeler' %}">Sözleşmeler</a>
+</nav>

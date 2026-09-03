@@ -1,0 +1,2 @@
+/* V61 — Ambar Yönetimi ekranındaki tüm kayıt listelerine bilgi (i) görünümü */
+.v61-form-help{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:9px 11px;border:1px solid #d6e5dd;background:#f8fbf9;border-radius:9px;color:#60766e;font-size:12px}.v61-form-help .v60-info-btn{width:28px;height:28px;font-size:14px;flex:0 0 auto}.v55-table th:last-child,.v55-table td.v60-info-cell{text-align:center}.v60-dialog .v55-status{white-space:normal}
