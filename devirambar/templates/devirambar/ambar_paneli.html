@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Ambar / Depo | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v50_devir_ambar.css' %}">{% endblock %}
+{% block body %}
+<main class="da-page">
+  <header class="da-heading">
+    <div><span class="eyebrow">YEREL SAYAÇ LOJİSTİĞİ</span><h1>Ambar / Depo Paneli</h1><p>Devir biriminden gelen sayacı teslim alın, kontrol edin ve Merkez Ambar'a sevk edin.</p></div>
+    <div class="da-role-card"><small>AKTİF MODÜL</small><strong>{% if ambar_yetkisi %}{{ ambar_yetkisi.ilce.ad }} Ambar Yetkilisi{% else %}Ambar / Depo Personeli{% endif %}</strong><span>{% if ambar_yetkisi %}Şef / Koordinatör Ek Yetkisi{% else %}Yerel Ambar • Web / PC{% endif %}</span></div>
+  </header>
+  <div style="margin:0 0 16px;"><a class="da-btn primary" href="{% url 'abonelik:ambar_yonetimi' %}">Ambar Yönetimi ve Sayaç Talebi →</a></div>
+  <section class="da-stats four">
+    <div><span>Teslim Bekleyen</span><strong>{{ ozet.teslim_bekleyen }}</strong><small>Devir biriminden geldi</small></div>
+    <div><span>Kontrol Bekleyen</span><strong>{{ ozet.kontrol_bekleyen }}</strong><small>Fiziksel teslim alındı</small></div>
+    <div><span>Merkez Sevk Bekleyen</span><strong>{{ ozet.merkez_sevk_bekleyen }}</strong><small>Kontrol tamamlandı</small></div>
+    <div><span>Merkeze Gönderilen</span><strong>{{ ozet.merkeze_gonderilen }}</strong><small>Merkez Ambar sürecinde</small></div>
+  </section>
+  <section class="da-panel">
+    <div class="da-panel-head"><div><span>AKTİF KUYRUK</span><h2>Yerel Ambardaki Sayaçlar</h2><p>Akış: Teslim Al → Kontrol Et → Merkez Ambara Gönder.</p></div></div>
+    <div class="da-table-wrap"><table class="da-table"><thead><tr><th>Başvuru</th><th>Vatandaş / İlçe</th><th>Sayaç</th><th>Gönderim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>
+    {% for x in bekleyen %}<tr>
+      <td><strong>{{ x.basvuru_no }}</strong><small>{{ x.eski_abone_no|default:"-" }} → {{ x.yeni_abone_no|default:"-" }}</small></td>
+      <td>{{ x.vatandas_ad_soyad }}<small>{{ x.ilce }}</small></td>
+      <td><strong>{{ x.sayac_seri_no }}</strong><small>{{ x.sayac_marka_model|default:"Marka/model yok" }}</small></td>
+      <td>{{ x.ambara_gonderim_tarihi|date:"d.m.Y H:i" }}<small>{% if x.ambara_gonderen %}{{ x.ambara_gonderen.username }}{% endif %}</small></td>
+      <td><span class="da-status s-{{ x.durum }}">{{ x.get_durum_display }}</span></td>
+      <td class="action-cell">
+        {% if x.durum == "ambara_gonderildi" %}<form method="post" action="{% url 'devirambar:ambar_durum' x.pk 'teslim-al' %}">{% csrf_token %}<button class="da-btn primary" type="submit">Teslim Al</button></form>
+        {% elif x.durum == "teslim_alindi" %}<form method="post" action="{% url 'devirambar:ambar_durum' x.pk 'kontrol-et' %}">{% csrf_token %}<button class="da-btn" type="submit">Kontrol Et</button></form>
+        {% elif x.durum == "kontrol_edildi" %}<form method="post" action="{% url 'devirambar:ambar_durum' x.pk 'merkeze-gonder' %}">{% csrf_token %}<button class="da-btn success" type="submit">Merkez Ambara Gönder →</button></form>{% endif %}
+      </td>
+    </tr>{% empty %}<tr><td colspan="6" class="da-empty">Yerel ambarda işlem bekleyen sayaç yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="da-panel da-completed">
+    <div class="da-panel-head"><div><span>SEVK GEÇMİŞİ</span><h2>Merkez Ambara Gönderilenler</h2></div></div>
+    <div class="da-list compact-list">{% for x in sevk_edilen %}<article class="da-item"><div class="da-item-top"><div><strong>{{ x.basvuru_no }} • {{ x.sayac_seri_no }}</strong><span>{{ x.vatandas_ad_soyad }} • {{ x.ilce }}</span></div><b class="da-status s-{{ x.durum }}">{{ x.get_durum_display }}</b></div><div class="da-meta"><span><b>Merkez sevk:</b> {{ x.merkeze_gonderim_tarihi|date:"d.m.Y H:i" }}</span>{% if x.merkez_depo_konumu %}<span><b>Merkez konum:</b> {{ x.merkez_depo_konumu }}</span>{% endif %}</div></article>{% empty %}<div class="da-empty">Henüz Merkez Ambara sevk edilen sayaç yok.</div>{% endfor %}</div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Devir Başvurusu | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v50_devir_ambar.css' %}">{% endblock %}
+{% block body %}
+<main class="da-page">
+  <header class="da-heading">
+    <div>
+      <span class="eyebrow">ABONELİK / DEVİR</span>
+      <h1>Vatandaş Devir Başvurusu</h1>
+      <p>Mevcut aboneliği bulun, yeni abone bilgilerini girin. Eski abonelik kapanır ve yeni abone numarası sistem tarafından otomatik oluşturulur.</p>
+    </div>
+    <div class="da-role-card"><small>AKTİF MODÜL</small><strong>Devir Başvuru Personeli</strong><span>Web / PC</span></div>
+  </header>
+
+  <section class="da-flow-strip">
+    <span><b>1</b> Mevcut aboneliği bul</span><i>→</i>
+    <span><b>2</b> Yeni abone bilgilerini gir</span><i>→</i>
+    <span><b>3</b> Yeni abone no otomatik oluşsun</span><i>→</i>
+    <span><b>4</b> Sökülen sayacı ambara gönder</span>
+  </section>
+
+  <section class="da-stats four">
+    <div><span>Devir Kaydı</span><strong>{{ ozet.hazirlaniyor }}</strong><small>Ambara gönderilmeyi bekliyor</small></div>
+    <div><span>Ambar Kuyruğu</span><strong>{{ ozet.ambara_gonderildi }}</strong><small>Teslim bekliyor</small></div>
+    <div><span>Ambar Sürecinde</span><strong>{{ ozet.ambarda }}</strong><small>Yerel / merkez işlemi</small></div>
+    <div><span>Tamamlanan</span><strong>{{ ozet.tamam }}</strong><small>Merkez depoya kaydedildi</small></div>
+  </section>
+
+  <div class="da-grid devir-grid">
+    <section>
+      <section class="da-panel">
+        <div class="da-panel-head">
+          <div><span>1. ADIM</span><h2>Mevcut Aboneliği Sorgula</h2><p>Eski Abone No veya sayaç seri numarasıyla aktif kaydı bulun.</p></div>
+        </div>
+        <form method="get" class="da-sub-search" autocomplete="off">
+          <input name="abonelik_sorgu" value="{{ abonelik_sorgu }}" placeholder="Örn. ABN-2025-000101 veya SYC-2025-00231" required>
+          <button class="da-btn primary" type="submit">Aboneliği Bul</button>
+        </form>
+
+        {% if secili_abonelik %}
+        <div class="da-subscription-card">
+          <div class="da-subscription-title"><span>AKTİF ABONELİK BULUNDU</span><strong>{{ secili_abonelik.abone_no }}</strong></div>
+          <div class="da-subscription-grid">
+            <div><small>Mevcut / Eski Abone</small><b>{{ secili_abonelik.abone_ad_soyad }}</b></div>
+            <div><small>İlçe</small><b>{{ secili_abonelik.ilce }}</b></div>
+            <div class="wide"><small>Hizmet Adresi</small><b>{{ secili_abonelik.adres }}</b></div>
+            <div><small>Sayaç Seri No</small><b>{{ secili_abonelik.sayac_seri_no|default:"-" }}</b></div>
+            <div><small>Marka / Model</small><b>{{ secili_abonelik.sayac_marka_model|default:"-" }}</b></div>
+            <div><small>Son Endeks</small><b>{{ secili_abonelik.sayac_endeks|default:"-" }}</b></div>
+          </div>
+        </div>
+        {% else %}
+        <div class="da-info da-search-help">Devir kaydı açabilmek için önce sistemde kayıtlı aktif aboneliği bulmanız gerekir. Eski abone bilgileri elle girilmez.</div>
+        {% endif %}
+      </section>
+
+      {% if secili_abonelik %}
+      <section class="da-panel">
+        <div class="da-panel-head">
+          <div><span>2. ADIM</span><h2>Yeni Abone Bilgileri</h2><p>Yeni abone numarasını personel yazmaz; kayıt tamamlandığında sistem üretir.</p></div>
+        </div>
+        <form method="post" class="da-form" autocomplete="off">{% csrf_token %}
+          <input type="hidden" name="eski_abonelik_id" value="{{ secili_abonelik.id }}">
+          <div class="da-auto-number"><span>Yeni Abone No</span><strong>OTOMATİK OLUŞTURULACAK</strong><small>Devir kaydı tamamlanınca eski numara kapanır, yeni numara oluşturulur.</small></div>
+          <div class="da-form-section"><h3>Yeni Abone</h3><div class="da-form-grid">
+            <label><span>Ad Soyad *</span>{{ form.vatandas_ad_soyad }}{{ form.vatandas_ad_soyad.errors }}</label>
+            <label><span>Telefon *</span>{{ form.telefon }}{{ form.telefon.errors }}</label>
+            <label><span>T.C. Kimlik No</span>{{ form.tc_kimlik_no }}{{ form.tc_kimlik_no.errors }}</label>
+            <label><span>Devir Nedeni *</span>{{ form.devir_nedeni }}{{ form.devir_nedeni.errors }}</label>
+            <label class="span-2"><span>Açıklama</span>{{ form.aciklama }}{{ form.aciklama.errors }}</label>
+          </div></div>
+          <button class="da-btn primary full" type="submit">Devir Kaydını Oluştur ve Yeni Abone No Üret</button>
+        </form>
+      </section>
+      {% endif %}
+    </section>
+
+    <section class="da-panel">
+      <div class="da-panel-head"><div><span>İŞ AKIŞI</span><h2>Son Devir Başvuruları</h2><p>Devir tamamlandıktan sonra sökülen/mevcut sayaç ambar sürecine aktarılır.</p></div></div>
+      <div class="da-list">
+      {% for x in kayitlar %}
+        <article class="da-item">
+          <div class="da-item-top"><div><strong>{{ x.basvuru_no }}</strong><span>{{ x.ilce }} • {{ x.adres|truncatechars:55 }}</span></div><b class="da-status s-{{ x.durum }}">{{ x.get_durum_display }}</b></div>
+          <div class="da-transfer-line">
+            <div><small>ESKİ ABONE</small><b>{{ x.eski_abone_ad_soyad|default:"Kayıtlı eski abone" }}</b><span>{{ x.eski_abone_no|default:"-" }}</span></div>
+            <i>→</i>
+            <div><small>YENİ ABONE</small><b>{{ x.vatandas_ad_soyad }}</b><span>{{ x.yeni_abone_no|default:"-" }}</span></div>
+          </div>
+          <div class="da-meta"><span><b>Sökülen Sayaç:</b> {{ x.sayac_seri_no }}</span><span><b>Marka:</b> {{ x.sayac_marka_model|default:"-" }}</span><span><b>Tarih:</b> {{ x.olusturulma_tarihi|date:"d.m.Y H:i" }}</span></div>
+          {% if x.durum == "hazirlaniyor" %}
+            {% if x.ambar_gonderime_hazir %}
+            <form method="post" action="{% url 'devirambar:ambara_gonder' x.pk %}" class="da-action-form">{% csrf_token %}<button class="da-btn send" type="submit">Sökülen Sayacı Ambara Gönder →</button></form>
+            {% else %}
+            <div class="da-info warning">Zorunlu devir / sayaç bilgileri eksik. Bu kayıt ambara gönderilemez.</div>
+            {% endif %}
+          {% elif x.durum == "ambara_gonderildi" %}<div class="da-info">Yerel ambar personelinin teslim alması bekleniyor.</div>
+          {% elif x.durum == "teslim_alindi" or x.durum == "kontrol_edildi" %}<div class="da-info">Yerel ambar işlemi devam ediyor.</div>
+          {% elif x.durum == "merkez_ambara_gonderildi" or x.durum == "merkez_teslim_alindi" or x.durum == "merkez_kontrol_edildi" %}<div class="da-info">Sayaç Merkez Ambar sürecinde.</div>
+          {% elif x.durum == "merkez_ambara_kaydedildi" %}<div class="da-info success">Merkez depo konumu: <b>{{ x.merkez_depo_konumu }}</b></div>
+          {% elif x.durum == "ambara_kaydedildi" %}<div class="da-info success">Eski akış depo konumu: <b>{{ x.depo_konumu }}</b></div>{% endif %}
+        </article>
+      {% empty %}<div class="da-empty">Henüz devir başvurusu oluşturulmadı.</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

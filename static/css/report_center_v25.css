@@ -1,0 +1,86 @@
+/* V25 — Rapor ekranı: sayfayı uzatmayan Excel benzeri yatay çalışma alanı */
+.report-center-v23{
+  padding-top:16px!important;
+}
+.rc23-heading{
+  margin-bottom:10px!important;
+}
+.rc23-heading h1{
+  font-size:23px!important;
+}
+.rc23-heading p{
+  margin-top:4px!important;
+}
+.rc23-filter-card{
+  margin-bottom:10px!important;
+}
+.rc23-filter-card form{
+  padding:10px!important;
+}
+.rc23-info-line{
+  padding:7px 10px!important;
+}
+
+/* Tablo kendi içinde hem yatay hem dikey kayar; tüm sayfayı aşağı uzatmaz */
+.rc23-scroll{
+  max-height:58vh!important;
+  min-height:330px;
+  overflow:auto!important;
+  position:relative;
+  background:#fff;
+}
+.rc23-table{
+  min-width:7200px!important;
+}
+.rc23-table th{
+  top:0;
+  height:32px;
+  padding:6px 8px!important;
+  font-size:7px!important;
+}
+.rc23-table td{
+  height:34px!important;
+  padding:5px 8px!important;
+  font-size:7.8px!important;
+}
+
+/* İlk iki kolon sabit; sağa kaydırırken talep kimliği kaybolmaz */
+.rc23-table th:first-child,
+.rc23-table td:first-child{
+  left:0!important;
+  min-width:125px!important;
+  width:125px!important;
+  max-width:125px!important;
+}
+.rc23-table th:nth-child(2),
+.rc23-table td:nth-child(2){
+  position:sticky;
+  left:125px;
+  z-index:1;
+  min-width:135px!important;
+  width:135px!important;
+  max-width:135px!important;
+  background:#fbfcfa;
+  box-shadow:2px 0 0 #e3e9e1;
+}
+.rc23-table th:nth-child(2){
+  z-index:3;
+  background:#eef5e8;
+}
+.rc23-table tbody tr:hover td{
+  background:#f8fbf6;
+}
+.rc23-table tbody tr:hover td:first-child,
+.rc23-table tbody tr:hover td:nth-child(2){
+  background:#f1f7eb;
+}
+
+.rc23-table-head{
+  padding:9px 12px!important;
+}
+.rc23-table-head h2{
+  font-size:14px!important;
+}
+.rc23-table-foot{
+  padding:7px 10px!important;
+}

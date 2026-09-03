@@ -1,0 +1,53 @@
+.rc33{padding:16px 20px 38px;min-width:0;background:#f4f7f5}
+.rc33-brand{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:12px 14px;border:1px solid #dce5df;border-radius:12px;background:#fff;margin-bottom:8px}
+.rc33-brand-left{display:flex;align-items:center;gap:12px;min-width:0}.rc33-brand-left img{width:230px;max-width:27vw;height:58px;object-fit:contain;object-position:left center}.rc33-brand-left>div{min-width:0}
+.rc33-brand-left span{display:block;font-size:7px;font-weight:900;letter-spacing:.09em;color:#718078}.rc33-brand-left h1{margin:2px 0 2px;font-size:19px;line-height:1.1;color:#193f30}.rc33-brand-left p{margin:0;font-size:8px;color:#7b8781}
+.rc33-period-box{min-width:205px;padding:8px 10px;border-left:3px solid #26825c;background:#f7faf8}.rc33-period-box small,.rc33-period-box strong,.rc33-period-box span{display:block}.rc33-period-box small{font-size:7px;color:#77857d}.rc33-period-box strong{margin:2px 0;font-size:11px;color:#2b4b3c}.rc33-period-box span{font-size:8px;color:#78857e}
+
+.rc33-filterbar{padding:7px 9px;border:1px solid #dce4de;border-radius:10px;background:#fff;margin-bottom:7px}.rc33-filterbar form{display:flex;align-items:end;gap:6px;flex-wrap:wrap}
+.rc33-filterbar label span{display:block;margin-bottom:2px;font-size:7px;font-weight:800;color:#718078}.rc33-filterbar input,.rc33-filterbar button,.rc33-export select,.rc33-export button{height:31px;border:1px solid #d6e0d8;border-radius:7px;background:#fff;padding:0 9px;font:inherit;font-size:8px}
+.rc33-quick{display:flex;gap:4px}.rc33-quick button{cursor:pointer}.rc33-apply,.rc33-export button{background:#1d5a42!important;color:#fff!important;border-color:#1d5a42!important;font-weight:900;cursor:pointer}
+
+.rc33-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px}.rc33-tabs button{min-height:43px;padding:7px 10px;border:1px solid #dce4de;border-radius:9px;background:#fff;text-align:left;cursor:pointer}
+.rc33-tabs b,.rc33-tabs span{display:block}.rc33-tabs b{font-size:10px;color:#2a493b}.rc33-tabs span{font-size:7px;color:#808c85}.rc33-tabs button.active{background:#edf5e9;border-color:#a9c69d;box-shadow:inset 3px 0 0 #5f985f}
+
+.rc33-view{padding:10px;border:1px solid #dce4de;border-radius:11px;background:#fff}.rc33-view-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}.rc33-view-head>div>span{font-size:7px;font-weight:900;letter-spacing:.09em;color:#708078}.rc33-view-head h2{margin:1px 0 0;font-size:14px;color:#28483a}.rc33-view-head p{margin:3px 0 0;font-size:8px;color:#7e8a83}
+.rc33-export{display:flex;gap:4px}.rc33-export select{min-width:115px}.rc33-export button{min-width:55px}
+
+.rc33-kpis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin-bottom:7px}.rc33-kpis article{padding:7px 8px;border:1px solid #e0e7e2;border-radius:8px;background:#fafcfa;min-height:54px}
+.rc33-kpis span,.rc33-kpis strong{display:block}.rc33-kpis span{font-size:7px;font-weight:800;color:#75827a}.rc33-kpis strong{margin-top:5px;font-size:15px;line-height:1;color:#294a3b}.rc33-kpis .open{background:#fff9ef}.rc33-kpis .done{background:#f2f8ef}.rc33-kpis .approval{background:#fff7df}.rc33-kpis .danger{background:#fff1ee;border-color:#ebc9c3}.rc33-kpis .danger strong{color:#aa463d}.rc33-kpis .time strong{font-size:10px;line-height:1.2}
+
+.rc33-general-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.rc33-summary{border:1px solid #e0e6e1;border-radius:8px;overflow:hidden}.rc33-summary header{padding:7px 8px;background:#f5f8f5;border-bottom:1px solid #e5eae6}.rc33-summary header span{font-size:6.5px;font-weight:900;letter-spacing:.07em;color:#718078}.rc33-summary h3{margin:1px 0 0;font-size:9px;color:#2f4b3e}.rc33-summary-scroll{max-height:250px;overflow:auto}
+.rc33-summary table{width:100%;border-collapse:collapse}.rc33-summary th,.rc33-summary td{padding:5px 7px;border-bottom:1px solid #edf0ed;font-size:7.5px;text-align:left}.rc33-summary th{position:sticky;top:0;background:#edf3ea;color:#5d7065;font-size:6.5px;text-transform:uppercase}.rc33-summary th:not(:first-child),.rc33-summary td:not(:first-child){text-align:center}
+
+.rc33-detail-info{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:6px 8px;border:1px solid #dfe6e1;border-radius:8px;background:#f7faf8;margin-bottom:5px;font-size:7px;color:#6f7d75}.rc33-detail-info strong{font-size:8px;color:#29493a}.rc33-detail-info b{margin-left:auto;color:#1f5b42}
+.rc33-top-scroll{height:13px;overflow-x:auto;overflow-y:hidden;margin-bottom:3px;border-radius:6px;background:#eef2ef}.rc33-top-scroll>div{height:1px}
+.rc33-table-scroll{max-height:69vh;overflow:auto;border:1px solid #dce4de;border-radius:8px;background:#fff;scrollbar-gutter:stable}
+.rc33-detail-table{border-collapse:separate;border-spacing:0;width:max-content;min-width:12600px}
+.rc33-detail-table th,.rc33-detail-table td{min-width:92px;max-width:240px;padding:5px 7px;border-right:1px solid #e4e9e5;border-bottom:1px solid #e6ebe7;font-size:7px;line-height:1.25;vertical-align:middle;white-space:normal}
+.rc33-detail-table th{position:sticky;top:0;z-index:5;background:#dfeadd;color:#344d40;font-size:6.5px;font-weight:900;text-transform:uppercase;letter-spacing:.01em}
+.rc33-detail-table tbody tr:nth-child(even) td{background:#fafcfb}.rc33-detail-table tbody tr:hover td{background:#f0f6ed}
+.rc33-detail-table th:nth-child(1),.rc33-detail-table td:nth-child(1){position:sticky;left:0;z-index:4;min-width:112px;background:#eef5ea}
+.rc33-detail-table th:nth-child(2),.rc33-detail-table td:nth-child(2){position:sticky;left:112px;z-index:4;min-width:112px;background:#f4f8f1}
+.rc33-detail-table th:nth-child(1),.rc33-detail-table th:nth-child(2){z-index:7;background:#d6e6d1}
+.rc33-detail-table td a{color:#245e42;text-decoration:none}.rc33-detail-table td a:hover{text-decoration:underline}
+.rc33-detail-table .col-talep_baslangic,.rc33-detail-table .col-saha_atama_tarihi,.rc33-detail-table .col-sef_onay_tarihi,.rc33-detail-table .col-tamamlanma_tarihi{min-width:122px}
+.rc33-detail-table .col-talep_adi,.rc33-detail-table .col-gonderen_birim,.rc33-detail-table .col-koordinator,.rc33-detail-table .col-saha{min-width:150px}
+.rc33-detail-table .col-adres,.rc33-detail-table .col-talep_aciklama,.rc33-detail-table .col-saha_sonuc,.rc33-detail-table .col-gorusme_notu{min-width:220px;max-width:320px}
+.rc33-status,.rc33-sla,.rc33-proof{display:inline-block;padding:3px 5px;border-radius:999px;background:#edf2ef;color:#3f584c;font-size:6.5px;font-weight:800;white-space:nowrap}
+.rc33-sla.bad{background:#fee8e4;color:#a33f37}.rc33-sla.warn{background:#fff2d6;color:#976f17}.rc33-sla.ok{background:#e8f5e9;color:#347140}.rc33-proof.yes{background:#e8f5e9;color:#347140}
+.rc33-empty{padding:18px!important;text-align:center!important;color:#7c8982}.rc33-table-foot{display:flex;justify-content:space-between;gap:8px;padding:6px 1px 0;font-size:7px;color:#7a8780}
+
+@media(max-width:1350px){.rc33-kpis{grid-template-columns:repeat(4,1fr)}}@media(max-width:900px){.rc33{padding:10px}.rc33-brand,.rc33-view-head{align-items:flex-start;flex-direction:column}.rc33-period-box{width:100%}.rc33-brand-left img{max-width:40vw}.rc33-kpis{grid-template-columns:repeat(2,1fr)}.rc33-general-grid{grid-template-columns:1fr}.rc33-export{width:100%}.rc33-export select{flex:1}.rc33-detail-info b{margin-left:0}}
+
+/* V39 — Satır bazlı Genel İcmal */
+.rc39-icmal-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 9px;margin-bottom:6px;border:1px solid #dfe6e1;border-radius:8px;background:#f7faf8;font-size:7.5px;color:#6f7d75}
+.rc39-icmal-info strong{font-size:9px;color:#29493a}
+.rc39-icmal-scroll{max-height:69vh;overflow:auto;border:1px solid #dce4de;border-radius:8px;background:#fff;scrollbar-gutter:stable}
+.rc39-icmal-table{width:100%;border-collapse:separate;border-spacing:0;min-width:820px}
+.rc39-icmal-table th,.rc39-icmal-table td{padding:9px 12px;border-right:1px solid #e4e9e5;border-bottom:1px solid #e6ebe7;font-size:9px;line-height:1.3;text-align:left;vertical-align:middle}
+.rc39-icmal-table th{position:sticky;top:0;z-index:3;background:#dfeadd;color:#344d40;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.02em}
+.rc39-icmal-table tbody tr:nth-child(even) td{background:#fafcfb}
+.rc39-icmal-table tbody tr:hover td{background:#f0f6ed}
+.rc39-icmal-table th:last-child,.rc39-icmal-table td:last-child{text-align:center;width:90px}
+.rc39-icmal-table .rc39-adet{font-weight:900;font-size:10px;color:#1d5a42}

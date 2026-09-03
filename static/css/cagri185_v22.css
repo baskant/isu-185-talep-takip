@@ -1,0 +1,173 @@
+/* V22 — Arama aksiyonları + kompakt kapanan işler paneli */
+
+/* İşlem kolonu, üç küçük butonu taşıyacak kadar geniş */
+.call185-v14 .v21-queue-table{min-width:1370px}
+.call185-v14 .v21-queue-table th:nth-child(9){width:270px}
+
+/* Satır içi arama aksiyonları */
+.call185-v14 .v22-row-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.call185-v14 .v22-row-actions a,
+.call185-v14 .v22-row-actions button{
+  height:27px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 9px;
+  border-radius:7px;
+  font-size:7.5px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  text-decoration:none;
+  transition:.15s ease;
+}
+.call185-v14 .v22-call-btn{
+  border:1px solid #8fa86b;
+  background:#edf5df;
+  color:#496333;
+}
+.call185-v14 .v22-call-btn:hover{background:#e1edce}
+.call185-v14 .v22-copy-btn{
+  border:1px solid #d8e0d5;
+  background:#fff;
+  color:#52655b;
+}
+.call185-v14 .v22-copy-btn:hover{background:#f4f7f3}
+.call185-v14 .v22-copy-btn.is-copied{
+  border-color:#95af72;
+  background:#edf5df;
+  color:#496333;
+}
+.call185-v14 .v22-called-btn{
+  border:1px solid #245d49;
+  background:#245d49;
+  color:#fff;
+}
+.call185-v14 .v22-called-btn:hover{background:#1d4d3c}
+
+/* Kapanan işler: üst kuyrukla aynı yatay ölçüde, varsayılan kapalı */
+.call185-v14 .v22-archive{
+  margin:12px;
+  border:1px solid #e0e7dd;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+}
+.call185-v14 .v22-archive>summary{
+  min-height:49px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 12px;
+  background:#fbfcfb;
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+}
+.call185-v14 .v22-archive>summary::-webkit-details-marker{display:none}
+.call185-v14 .v22-archive[open]>summary{border-bottom:1px solid #e9eee8}
+.call185-v14 .v22-archive-title span{
+  display:block;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.1em;
+  color:#7a8880;
+}
+.call185-v14 .v22-archive-title strong{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  color:#3a4e44;
+}
+.call185-v14 .v22-archive-summary-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:none;
+}
+.call185-v14 .v22-archive-summary-right b{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#f0f4ed;
+  font-size:7.5px;
+  color:#64736b;
+}
+.call185-v14 .v22-chevron{
+  font-size:16px;
+  line-height:1;
+  color:#627269;
+  transition:transform .18s ease;
+}
+.call185-v14 .v22-archive[open] .v22-chevron{transform:rotate(180deg)}
+
+.call185-v14 .v22-archive-body{background:#fff}
+.call185-v14 .v22-archive-scroll{
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:#9aa8a0 #eef2ee;
+}
+.call185-v14 .v22-archive-table{
+  width:100%;
+  min-width:1120px;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.call185-v14 .v22-archive-table th{
+  padding:7px 9px;
+  background:#f5f8f4;
+  border-bottom:1px solid #dde5db;
+  font-size:7px;
+  letter-spacing:.055em;
+  text-align:left;
+  color:#68786f;
+  white-space:nowrap;
+}
+.call185-v14 .v22-archive-table td{
+  height:42px;
+  padding:6px 9px;
+  border-bottom:1px solid #edf1ec;
+  font-size:8.3px;
+  color:#43554c;
+  vertical-align:middle;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.call185-v14 .v22-archive-table tbody tr:hover{background:#f9fbf8}
+.call185-v14 .v22-archive-table th:nth-child(1){width:135px}
+.call185-v14 .v22-archive-table th:nth-child(2){width:165px}
+.call185-v14 .v22-archive-table th:nth-child(3){width:135px}
+.call185-v14 .v22-archive-table th:nth-child(4){width:190px}
+.call185-v14 .v22-archive-table th:nth-child(5){width:110px}
+.call185-v14 .v22-archive-table th:nth-child(6){width:140px}
+.call185-v14 .v22-archive-table th:nth-child(7){width:145px}
+.call185-v14 .v22-archive-table th:nth-child(8){width:90px}
+.call185-v14 .v22-detail-link{
+  color:#607737;
+  font-weight:900;
+  text-decoration:none;
+}
+.call185-v14 .v22-empty{
+  padding:18px!important;
+  text-align:center;
+  color:#8a9690!important;
+}
+
+/* Küçük açıklama: Arandı butonu sonuç formunu açar */
+.call185-v14 .v22-called-hint{
+  font-size:7px;
+  color:#819087;
+}
+
+@media(max-width:800px){
+  .call185-v14 .v22-row-actions{gap:4px}
+  .call185-v14 .v22-row-actions a,
+  .call185-v14 .v22-row-actions button{padding:0 7px}
+}

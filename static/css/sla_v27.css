@@ -1,0 +1,229 @@
+/* V27 — Öncelik bazlı sahaya atama SLA */
+
+.sla27-strip{
+  margin:10px 0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 12px;
+  border:1px solid #dce5d7;
+  border-radius:13px;
+  background:#fbfcfa;
+}
+.sla27-strip-main{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.sla27-kicker{
+  display:block;
+  margin-bottom:2px;
+  color:#75827a;
+  font-size:7.5px;
+  font-weight:900;
+  letter-spacing:.09em;
+}
+.sla27-strip-main strong{
+  color:#2e453a;
+  font-size:10px;
+}
+.sla27-rules{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+.sla27-rule{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:25px;
+  padding:0 8px;
+  border:1px solid #dfe6dc;
+  border-radius:999px;
+  background:#fff;
+  color:#5b6a62;
+  font-size:7.5px;
+  font-weight:800;
+}
+.sla27-rule b{color:#31473c}
+.sla27-rule.urgent{border-color:#efc2bd;background:#fff6f4}
+.sla27-rule.high{border-color:#efdbb9;background:#fffaf0}
+.sla27-rule.normal{border-color:#cfdcae;background:#f8fbea}
+.sla27-rule.low{border-color:#dce4d8;background:#fafcf9}
+
+.sla27-strip-stats,
+.sla27-admin-counts{
+  display:flex;
+  gap:6px;
+  flex:none;
+}
+.sla27-strip-stats>span,
+.sla27-admin-counts>span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:29px;
+  padding:0 9px;
+  border-radius:8px;
+  font-size:7.5px;
+  font-weight:900;
+}
+.sla27-danger,
+.sla27-admin-counts .danger{
+  border:1px solid #efc0ba;
+  background:#fff1ef;
+  color:#9a3730;
+}
+.sla27-warn,
+.sla27-admin-counts .warn{
+  border:1px solid #efd9a8;
+  background:#fff8e9;
+  color:#88621e;
+}
+
+.sla27-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  white-space:nowrap;
+  font-size:7px;
+  font-weight:900;
+}
+.sla27-badge.danger{
+  background:#fde7e4;
+  color:#a13e35;
+  border:1px solid #efbeb8;
+}
+.sla27-badge.warn{
+  background:#fff2d7;
+  color:#85601d;
+  border:1px solid #ead29e;
+}
+.sla27-badge.ok{
+  background:#edf5e6;
+  color:#55713f;
+  border:1px solid #cbdcac;
+}
+
+.sla27-admin-panel{
+  margin-bottom:14px;
+}
+.sla27-admin-panel .panel-head{
+  align-items:flex-start;
+}
+.sla27-admin-list{
+  border-top:1px solid #e7ece5;
+}
+.sla27-admin-row{
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) 90px 115px 180px;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  padding:7px 12px;
+  border-bottom:1px solid #edf1ec;
+  color:inherit;
+  text-decoration:none;
+}
+.sla27-admin-row:hover{
+  background:#fafcfa;
+}
+.sla27-admin-row.danger{
+  box-shadow:inset 3px 0 0 #d85c50;
+}
+.sla27-admin-row.warn{
+  box-shadow:inset 3px 0 0 #d8a23e;
+}
+.sla27-admin-row>div{
+  min-width:0;
+}
+.sla27-admin-row strong{
+  display:block;
+  margin-bottom:2px;
+  color:#294237;
+  font-size:9px;
+}
+.sla27-admin-row div span{
+  display:block;
+  overflow:hidden;
+  color:#718078;
+  font-size:7.5px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.sla27-admin-row small{
+  color:#7d8982;
+  font-size:7.2px;
+  text-align:right;
+}
+.sla27-time{
+  justify-self:start;
+  min-height:23px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 7px;
+  border-radius:7px;
+  font-size:7px;
+  font-weight:900;
+}
+.sla27-time.danger{
+  background:#fde9e6;
+  color:#a33d34;
+}
+.sla27-time.warn{
+  background:#fff2d5;
+  color:#85601d;
+}
+.sla27-empty{
+  padding:16px;
+  color:#7c8881;
+  font-size:8.5px;
+  text-align:center;
+}
+
+/* Atama listesinde SLA bilgisi ikinci planda ama görünür olsun */
+.coordinator-live-page .coord-request-actions{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:5px;
+}
+
+/* SLA aşanlar atama listesinin içinde fark edilsin */
+.coordinator-live-page .coord-request:has(.sla27-badge.danger){
+  border-color:#edc1bb;
+  background:#fffafa;
+}
+.coordinator-live-page .coord-request:has(.sla27-badge.warn){
+  border-color:#ead8ae;
+  background:#fffdf7;
+}
+
+@media(max-width:1050px){
+  .sla27-strip{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .sla27-strip-main{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:7px;
+  }
+  .sla27-admin-row{
+    grid-template-columns:1fr auto auto;
+  }
+  .sla27-admin-row small{
+    display:none;
+  }
+}
+@media(max-width:700px){
+  .sla27-admin-row{
+    grid-template-columns:1fr auto;
+  }
+  .sla27-time{
+    display:none;
+  }
+}

@@ -1,0 +1,207 @@
+/* V44 — Arayüz sadeleştirme ve 185 form yerleşimi
+   Amaç: işlevleri değiştirmeden tekrar eden bilgi ve görsel kalabalığı azaltmak. */
+
+/* ---------------------------------------------------------
+   1) Ortak üst bar: gereksiz kullanıcı baş harfi kaldırıldı
+   --------------------------------------------------------- */
+.topbar .user-box{gap:0}
+.topbar .user-text{padding:0 2px}
+.topbar .user-text strong{font-size:12px;line-height:1.2}
+.topbar .user-text small{font-size:9px;margin-top:2px}
+.topbar .top-actions{gap:10px}
+
+/* Ortak ekranlarda zaten başlıkla anlatılan yardımcı metinleri geri plana al. */
+.workspace-page .page-heading>div>p,
+.system-main .page-heading>div>p,
+.workspace-page .panel-head p,
+.system-main .panel-head p{display:none!important}
+
+/* ---------------------------------------------------------
+   2) 185 — üst durum özeti, Sistem Yönetim ekranındaki kart dili
+   --------------------------------------------------------- */
+.call185-v14 .page-heading.call-heading{
+  display:block!important;
+  margin-bottom:10px!important;
+}
+.call185-v14 .page-heading.call-heading h1{margin-bottom:0!important}
+.call185-v14 .compact-stats{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:9px!important;
+  margin-top:13px!important;
+  width:100%!important;
+}
+.call185-v14 .call-stat-card{
+  position:relative;
+  min-width:0;
+  padding:12px 14px 11px 16px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#fff;
+  overflow:hidden;
+}
+.call185-v14 .call-stat-card::before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;width:4px;
+  background:var(--primary);
+}
+.call185-v14 .call-stat-card.danger::before{background:var(--danger)}
+.call185-v14 .call-stat-card.warn::before{background:var(--warn)}
+.call185-v14 .call-stat-card.approval::before{background:#c59b32}
+.call185-v14 .call-stat-card.success::before{background:var(--success)}
+.call185-v14 .call-stat-card.callback::before{background:#4b91b4}
+.call185-v14 .call-stat-card span{
+  display:block!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:var(--muted)!important;
+  font-size:10px!important;
+  font-weight:750!important;
+}
+.call185-v14 .call-stat-card strong{
+  display:block;
+  margin-top:5px;
+  font-size:23px;
+  line-height:1;
+  color:var(--ink);
+}
+
+/* Sekme başlıkları yeterli; alt açıklamalar kalabalık yaratmasın. */
+.call185-v14 .call-tab-button small{display:none!important}
+
+/* ---------------------------------------------------------
+   3) 185 — formu gerçek iki aşamalı düzene getir
+      1. satır: Vatandaş | Arıza
+      2. satır: Konum + büyük harita tam genişlik
+   --------------------------------------------------------- */
+.call185-v14 .ticket-workspace-v13{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-areas:
+    "citizen fault"
+    "location location"
+    "submit submit"!important;
+  grid-template-rows:auto auto auto!important;
+  align-items:start!important;
+  gap:10px!important;
+}
+.call185-v14 .request-citizen-panel{grid-area:citizen!important}
+.call185-v14 .request-fault-panel{
+  grid-area:fault!important;
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.call185-v14 .request-location-panel{grid-area:location!important}
+.call185-v14 .request-submit-bar{grid-area:submit!important}
+
+/* Aynı bilgiyi tekrar eden minik açıklamalar kaldırıldı. */
+.call185-v14 .ticket-workspace-v13 .section-title.compact p,
+.call185-v14 .citizen-form-hint,
+.call185-v14 .request-fault-panel .compact-route-info,
+.call185-v14 #geo-status{display:none!important}
+
+/* Arıza alanı sadece ihtiyacı kadar yer kaplasın. */
+.call185-v14 .request-fault-panel .compact-form-stack{
+  flex:0 0 auto!important;
+  align-content:start!important;
+}
+.call185-v14 .request-fault-panel textarea{
+  min-height:96px!important;
+  height:96px!important;
+  max-height:160px!important;
+}
+
+/* Konum kartı: adres alanı solda, büyük harita sağda. */
+.call185-v14 .request-location-panel{
+  display:grid!important;
+  grid-template-columns:minmax(420px,.9fr) minmax(500px,1.1fr)!important;
+  grid-template-rows:auto auto minmax(260px,1fr)!important;
+  column-gap:14px!important;
+  row-gap:8px!important;
+  align-items:stretch!important;
+}
+.call185-v14 .request-location-panel>.section-title{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+}
+.call185-v14 .request-location-panel>.compact-form-grid{
+  grid-column:1!important;
+  grid-row:2/4!important;
+  align-content:start!important;
+  gap:7px 9px!important;
+}
+.call185-v14 .request-location-panel>.compact-map-toolbar{
+  grid-column:2!important;
+  grid-row:2!important;
+  margin:0!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+}
+.call185-v14 .request-location-panel>.request-entry-map{
+  grid-column:2!important;
+  grid-row:3!important;
+  width:100%!important;
+}
+.call185-v14 .request-entry-map{
+  height:300px!important;
+  min-height:300px!important;
+  margin:0!important;
+  border-radius:11px!important;
+}
+.call185-v14 .compact-map-toolbar .btn{
+  min-width:118px;
+  min-height:34px!important;
+}
+.call185-v14 .request-location-panel textarea{
+  min-height:58px!important;
+  height:58px!important;
+  max-height:90px!important;
+}
+
+/* Kayıt barı: açıklama yerine tek güçlü aksiyon. */
+.call185-v14 .request-submit-bar{
+  justify-content:flex-end!important;
+  min-height:50px!important;
+  padding:8px 10px!important;
+}
+.call185-v14 .request-submit-bar>div{display:none!important}
+.call185-v14 .request-submit-bar .btn{
+  min-width:260px;
+  min-height:36px!important;
+}
+
+/* Vatandaş geri dönüş ekranında tekrar eden kullanım açıklamalarını azalt. */
+.call185-v14 .v21-center-header p,
+.call185-v14 .v21-queue-head>small{display:none!important}
+
+/* ---------------------------------------------------------
+   4) Mobil / masaüstü operasyon ekranlarında üst barda zaten
+      görünen kullanıcı ve rolün ikinci kez yazılmasını önle.
+   --------------------------------------------------------- */
+.m34-header p{display:none!important}
+.field-page-heading .scope-label{display:none!important}
+
+/* Küçük ekranlar */
+@media(max-width:1180px){
+  .call185-v14 .compact-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .call185-v14 .ticket-workspace-v13{
+    grid-template-columns:1fr!important;
+    grid-template-areas:"citizen" "fault" "location" "submit"!important;
+  }
+  .call185-v14 .request-location-panel{
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto!important;
+  }
+  .call185-v14 .request-location-panel>*{
+    grid-column:auto!important;
+    grid-row:auto!important;
+  }
+  .call185-v14 .request-entry-map{height:280px!important;min-height:280px!important}
+}
+@media(max-width:700px){
+  .call185-v14 .compact-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .call185-v14 .request-submit-bar .btn{width:100%;min-width:0}
+}

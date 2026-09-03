@@ -1,0 +1,15 @@
+/* V18 — Biraz daha kapsamlı, yine sade müşteri memnuniyeti formu */
+.call185-v14 .v17-conversation-fields{
+  grid-template-columns:1fr 1fr!important;
+  align-items:start;
+}
+.call185-v14 .v18-question{min-width:0}
+.call185-v14 .v18-duration{
+  grid-column:1/-1;
+  max-width:230px;
+}
+.call185-v14 .v18-question .v17-rating>span{min-height:38px}
+@media(max-width:1180px){
+  .call185-v14 .v17-conversation-fields{grid-template-columns:1fr!important}
+  .call185-v14 .v18-duration{grid-column:auto;max-width:none}
+}

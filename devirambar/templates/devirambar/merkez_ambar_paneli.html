@@ -1,0 +1,87 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Merkez Ambar | İSU{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/v50_devir_ambar.css' %}">{% endblock %}
+{% block body %}
+<main class="da-page">
+  <header class="da-heading">
+    <div><span class="eyebrow">MERKEZ SAYAÇ DEPOSU</span><h1>Merkez Ambar Paneli</h1><p>Yerel ambarlardan sevk edilen sayaçları teslim alın, kontrol edin ve merkez depo/raf konumuna kaydedin.</p></div>
+    <div class="da-role-card"><small>AKTİF MODÜL</small><strong>Merkez Ambar Personeli</strong><span>Merkez Depo • Web / PC</span></div>
+  </header>
+  <div style="margin:0 0 16px;"><a class="da-btn primary" href="{% url 'abonelik:ambar_yonetimi' %}">Sayaç Stok ve İlçe Talepleri →</a></div>
+  <section class="da-stats four">
+    <div><span>Teslim Bekleyen</span><strong>{{ ozet.teslim_bekleyen }}</strong><small>Yerel ambardan sevk edildi</small></div>
+    <div><span>Kontrol Bekleyen</span><strong>{{ ozet.kontrol_bekleyen }}</strong><small>Merkez teslim aldı</small></div>
+    <div><span>Depo Kaydı Bekleyen</span><strong>{{ ozet.kayit_bekleyen }}</strong><small>Merkez kontrol tamamlandı</small></div>
+    <div><span>Bugün Kaydedilen</span><strong>{{ ozet.bugun }}</strong><small>Merkez depoya kapatıldı</small></div>
+  </section>
+  <section class="da-panel">
+    <div class="da-panel-head"><div><span>MERKEZ AMBAR KUYRUĞU</span><h2>Gelen Sayaçlar</h2><p>Akış: Teslim Al → Kontrol Et → Merkez Ambara Kaydet.</p></div></div>
+    <div class="da-table-wrap"><table class="da-table"><thead><tr><th>Başvuru</th><th>Vatandaş / İlçe</th><th>Sayaç</th><th>Merkez Sevk</th><th>Durum</th><th>Bilgi</th><th>İşlem</th></tr></thead><tbody>
+    {% for x in bekleyen %}<tr>
+      <td><strong>{{ x.basvuru_no }}</strong><small>{{ x.eski_abone_no|default:"-" }} → {{ x.yeni_abone_no|default:"-" }}</small></td>
+      <td>{{ x.vatandas_ad_soyad }}<small>{{ x.ilce }}</small></td>
+      <td><strong>{{ x.sayac_seri_no }}</strong><small>{{ x.sayac_marka_model|default:"Marka/model yok" }}</small></td>
+      <td>{{ x.merkeze_gonderim_tarihi|date:"d.m.Y H:i" }}<small>{% if x.merkeze_gonderen %}{{ x.merkeze_gonderen.username }}{% endif %}</small></td>
+      <td><span class="da-status s-{{ x.durum }}">{{ x.get_durum_display }}</span></td>
+      <td class="da-info-cell">
+        <button type="button" class="da-info-button" title="Vatandaş ve işlem bilgilerini görüntüle" aria-label="{{ x.basvuru_no }} detay bilgilerini görüntüle" onclick="document.getElementById('merkez-info-{{ x.pk }}').showModal()">i</button>
+        <dialog class="da-detail-dialog" id="merkez-info-{{ x.pk }}">
+          <div class="da-dialog-head">
+            <div><span>BAŞVURU DETAYI</span><h3>{{ x.basvuru_no }}</h3><p>Vatandaş, abonelik, sayaç ve ambar işlem bilgileri</p></div>
+            <button type="button" class="da-dialog-close" aria-label="Pencereyi kapat" onclick="this.closest('dialog').close()">×</button>
+          </div>
+          <div class="da-detail-grid">
+            <section><h4>Vatandaş Bilgileri</h4><dl>
+              <div><dt>Yeni Abone</dt><dd>{{ x.vatandas_ad_soyad|default:"-" }}</dd></div>
+              <div><dt>T.C. Kimlik No</dt><dd>{{ x.tc_kimlik_no|default:"-" }}</dd></div>
+              <div><dt>Telefon</dt><dd>{{ x.telefon|default:"-" }}</dd></div>
+              <div class="wide"><dt>Hizmet Adresi</dt><dd>{{ x.adres|default:"-" }}</dd></div>
+              <div><dt>İlçe</dt><dd>{{ x.ilce|default:"-" }}</dd></div>
+              <div><dt>Devir Nedeni</dt><dd>{{ x.get_devir_nedeni_display|default:"-" }}</dd></div>
+            </dl></section>
+            <section><h4>Abonelik Bilgileri</h4><dl>
+              <div><dt>Eski Abone No</dt><dd>{{ x.eski_abone_no|default:"-" }}</dd></div>
+              <div><dt>Eski Abone</dt><dd>{{ x.eski_abone_ad_soyad|default:"-" }}</dd></div>
+              <div><dt>Yeni Abone No</dt><dd>{{ x.yeni_abone_no|default:"-" }}</dd></div>
+              <div><dt>Başvuru Tarihi</dt><dd>{{ x.olusturulma_tarihi|date:"d.m.Y H:i" }}</dd></div>
+              <div class="wide"><dt>Açıklama</dt><dd>{{ x.aciklama|default:"-" }}</dd></div>
+            </dl></section>
+            <section><h4>Sayaç Bilgileri</h4><dl>
+              <div><dt>Seri No</dt><dd>{{ x.sayac_seri_no|default:"-" }}</dd></div>
+              <div><dt>Marka / Model</dt><dd>{{ x.sayac_marka_model|default:"-" }}</dd></div>
+              <div><dt>Son Endeks</dt><dd>{% if x.sayac_endeks != None %}{{ x.sayac_endeks }}{% else %}-{% endif %}</dd></div>
+              <div><dt>Durum</dt><dd><span class="da-status s-{{ x.durum }}">{{ x.get_durum_display }}</span></dd></div>
+            </dl></section>
+            <section><h4>Ambar İşlem Geçmişi</h4><dl>
+              <div><dt>Yerel Ambara Gönderim</dt><dd>{{ x.ambara_gonderim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+              <div><dt>Yerel Teslim</dt><dd>{{ x.teslim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+              <div><dt>Yerel Kontrol</dt><dd>{{ x.kontrol_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+              <div><dt>Merkeze Sevk</dt><dd>{{ x.merkeze_gonderim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+              <div><dt>Merkez Teslim</dt><dd>{{ x.merkez_teslim_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+              <div><dt>Merkez Kontrol</dt><dd>{{ x.merkez_kontrol_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+            </dl></section>
+          </div>
+          <div class="da-dialog-actions"><button type="button" class="da-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div>
+        </dialog>
+      </td>
+      <td class="action-cell">
+        {% if x.durum == "merkez_ambara_gonderildi" %}<form method="post" action="{% url 'devirambar:merkez_ambar_durum' x.pk 'teslim-al' %}">{% csrf_token %}<button class="da-btn primary" type="submit">Teslim Al</button></form>
+        {% elif x.durum == "merkez_teslim_alindi" %}<form method="post" action="{% url 'devirambar:merkez_ambar_durum' x.pk 'kontrol-et' %}">{% csrf_token %}<button class="da-btn" type="submit">Kontrol Et</button></form>
+        {% elif x.durum == "merkez_kontrol_edildi" %}<form method="post" action="{% url 'devirambar:merkez_ambar_durum' x.pk 'ambara-kaydet' %}" class="inline-storage">{% csrf_token %}<input name="depo_konumu" required placeholder="Merkez Depo / Raf"><input name="ambar_notu" placeholder="Not (opsiyonel)"><button class="da-btn success" type="submit">Merkez Ambara Kaydet</button></form>{% endif %}
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="7" class="da-empty">Merkez ambarda işlem bekleyen sayaç yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="da-panel da-completed"><div class="da-panel-head"><div><span>SONUÇLANANLAR</span><h2>Son Merkez Ambar Kayıtları</h2></div></div><div class="da-list compact-list">{% for x in kapanan %}<article class="da-item"><div class="da-item-top"><div><strong>{{ x.basvuru_no }} • {{ x.sayac_seri_no }}</strong><span>{{ x.vatandas_ad_soyad }} • {{ x.ilce }}</span></div><div class="da-item-actions"><button type="button" class="da-info-button small" title="Vatandaş ve işlem bilgilerini görüntüle" aria-label="{{ x.basvuru_no }} detay bilgilerini görüntüle" onclick="document.getElementById('merkez-kapanan-info-{{ x.pk }}').showModal()">i</button><b class="da-status s-merkez_ambara_kaydedildi">Merkez Ambara Kaydedildi</b></div></div><div class="da-meta"><span><b>Konum:</b> {{ x.merkez_depo_konumu }}</span><span><b>Kayıt:</b> {{ x.merkez_ambar_kayit_tarihi|date:"d.m.Y H:i" }}</span></div></article>
+    <dialog class="da-detail-dialog" id="merkez-kapanan-info-{{ x.pk }}">
+      <div class="da-dialog-head"><div><span>MERKEZ AMBAR KAYDI</span><h3>{{ x.basvuru_no }}</h3><p>Sonuçlanan vatandaş, sayaç ve depo bilgileri</p></div><button type="button" class="da-dialog-close" aria-label="Pencereyi kapat" onclick="this.closest('dialog').close()">×</button></div>
+      <div class="da-detail-grid">
+        <section><h4>Vatandaş ve Abonelik</h4><dl><div><dt>Yeni Abone</dt><dd>{{ x.vatandas_ad_soyad|default:"-" }}</dd></div><div><dt>T.C. Kimlik No</dt><dd>{{ x.tc_kimlik_no|default:"-" }}</dd></div><div><dt>Telefon</dt><dd>{{ x.telefon|default:"-" }}</dd></div><div><dt>Eski Abone No</dt><dd>{{ x.eski_abone_no|default:"-" }}</dd></div><div><dt>Yeni Abone No</dt><dd>{{ x.yeni_abone_no|default:"-" }}</dd></div><div class="wide"><dt>Adres</dt><dd>{{ x.adres|default:"-" }}</dd></div></dl></section>
+        <section><h4>Sayaç ve Merkez Depo</h4><dl><div><dt>Seri No</dt><dd>{{ x.sayac_seri_no|default:"-" }}</dd></div><div><dt>Marka / Model</dt><dd>{{ x.sayac_marka_model|default:"-" }}</dd></div><div><dt>Depo / Raf</dt><dd>{{ x.merkez_depo_konumu|default:"-" }}</dd></div><div><dt>Kayıt Tarihi</dt><dd>{{ x.merkez_ambar_kayit_tarihi|date:"d.m.Y H:i"|default:"-" }}</dd></div><div class="wide"><dt>Merkez Ambar Notu</dt><dd>{{ x.merkez_ambar_notu|default:"-" }}</dd></div></dl></section>
+      </div>
+      <div class="da-dialog-actions"><button type="button" class="da-btn primary" onclick="this.closest('dialog').close()">Kapat</button></div>
+    </dialog>
+    {% empty %}<div class="da-empty">Henüz merkez ambar kaydı yok.</div>{% endfor %}</div></section>
+</main>
+{% endblock %}

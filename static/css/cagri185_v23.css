@@ -1,0 +1,106 @@
+/* V23 — Bilgi popup'ından ankete yönlendirme + otomatik görünen kısa anket */
+.call185-v14 .v23-info-survey{
+  margin-top:10px;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  border:1px solid #dce7d6;
+  border-radius:10px;
+  background:#f7faf4;
+}
+.call185-v14 .v23-info-survey span{
+  display:block;
+  margin-bottom:2px;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.08em;
+  color:#7b897f;
+}
+.call185-v14 .v23-info-survey strong{
+  display:block;
+  font-size:9px;
+  color:#345146;
+}
+.call185-v14 .v23-info-survey small{
+  display:block;
+  margin-top:2px;
+  max-width:600px;
+  font-size:7.5px;
+  line-height:1.35;
+  color:#7c8881;
+}
+.call185-v14 .v23-info-survey button{
+  flex:none;
+  min-height:31px;
+  padding:0 12px;
+  border:0;
+  border-radius:8px;
+  background:#245d49;
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.call185-v14 .v23-survey-card{
+  margin-top:10px;
+  padding:10px;
+  border:1px solid #dce6d9;
+  border-radius:12px;
+  background:#fbfcfa;
+}
+.call185-v14 .v23-survey-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.call185-v14 .v23-survey-head span{
+  display:block;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.08em;
+  color:#7a897f;
+}
+.call185-v14 .v23-survey-head strong{
+  display:block;
+  margin-top:1px;
+  font-size:10px;
+  color:#2f4a40;
+}
+.call185-v14 .v23-survey-head>b{
+  padding:4px 7px;
+  border-radius:999px;
+  background:#eef3e8;
+  color:#627249;
+  font-size:7px;
+  letter-spacing:.04em;
+}
+.call185-v14 .v23-survey-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.call185-v14 .v23-survey-card .v17-fieldset{
+  margin:0;
+  padding:8px;
+  background:#fff;
+}
+.call185-v14 .v23-survey-card .v17-fieldset legend{
+  font-size:8px;
+}
+.call185-v14 .v23-score{
+  min-width:0;
+}
+.call185-v14 .v23-survey-note{
+  margin:7px 1px 0;
+  color:#89958e;
+  font-size:7.5px;
+}
+@media(max-width:850px){
+  .call185-v14 .v23-survey-grid{grid-template-columns:1fr}
+  .call185-v14 .v23-info-survey{align-items:flex-start;flex-direction:column}
+}

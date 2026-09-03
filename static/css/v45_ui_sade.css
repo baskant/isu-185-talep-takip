@@ -1,0 +1,70 @@
+/* V45 — üst bar ve 185 form hizalama rötuşu
+   İş akışına dokunmadan tekrar eden kullanıcı bilgisi ve panel dengesizliği giderildi. */
+
+/* 1) Ortak üst bar: rol zaten gösterildiği için tam ad tekrar edilmez.
+      Sadece hesap adı kalır; çıkış ikonu yerine anlaşılır metin kullanılır. */
+.topbar .top-actions{
+  gap:10px!important;
+}
+.topbar .user-box{
+  display:flex!important;
+  align-items:center!important;
+  min-height:36px;
+  padding:0 2px;
+}
+.topbar .user-handle{
+  display:inline-flex;
+  align-items:center;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+}
+.topbar .logout-form{margin:0}
+.topbar .logout-btn{
+  min-width:68px;
+  height:36px;
+  padding:0 14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--ink);
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.topbar .logout-btn:hover{
+  background:#f7f9f5;
+  border-color:#cfd9ca;
+}
+
+/* Eski isim bloğu başka bir sayfadan kalırsa görünmesin. */
+.topbar .user-text{display:none!important}
+
+/* 2) 185 yeni talep formu: Vatandaş ve Arıza panelleri aynı satırda
+      tam olarak aynı yüksekliğe uzanır. */
+.call185-v14 .ticket-workspace-v13{
+  align-items:stretch!important;
+}
+.call185-v14 .request-citizen-panel,
+.call185-v14 .request-fault-panel{
+  align-self:stretch!important;
+  height:100%!important;
+}
+.call185-v14 .request-citizen-panel{
+  min-height:100%!important;
+}
+
+/* Vatandaş formu boş alana rağmen üstte toplu kalsın; panelin kendisi eşit uzar. */
+.call185-v14 .request-citizen-panel .compact-form-grid{
+  align-content:start!important;
+}
+
+/* 3) Üst bar dar ekranlarda taşmasın. */
+@media(max-width:700px){
+  .topbar{padding-left:14px!important;padding-right:14px!important}
+  .topbar .role-pill{display:none!important}
+  .topbar .user-handle{display:none!important}
+  .topbar .logout-btn{min-width:58px;padding:0 10px}
+}
